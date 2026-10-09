@@ -176,6 +176,18 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
         if sc > best_sc:
             best_sc, best_off = sc, float(off)
 
+    # Lag rounding to whole hops leaves the period slightly off, which drifts
+    # tens of ms over a clip; refine period/offset by fitting on-beat onset peaks
+    if len(peak_times) >= 4:
+        n = np.round((peak_times - best_off) / period)
+        near = np.abs((peak_times - best_off) / period - n) < 0.2
+        if near.sum() >= 4 and len(np.unique(n[near])) >= 2:
+            fit_period, fit_off = np.polyfit(n[near], peak_times[near], 1)
+            if abs(fit_period - period) < 0.05 * period:
+                period = float(fit_period)
+                best_bpm = 60.0 / period
+                best_off = float(fit_off) % period
+
     bt = best_off
     while bt - period >= -0.01:
         bt -= period
@@ -199,9 +211,11 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
 
     beat_hits: list[dict[str, Any]] = []
     accents: list[float] = []
+    # Search window of about ±10% of a beat (never under ±2 hops) absorbs residual drift
+    hw = max(2, int(round(0.1 * period / hop_s)))
     for i, b in enumerate(beats):
         idx = max(0, min(len(o_kick) - 1, int(round(b / hop_s))))
-        lo, hi = max(0, idx - 2), min(len(o_kick), idx + 3)
+        lo, hi = max(0, idx - hw), min(len(o_kick), idx + hw + 1)
         k, s, f = float(o_kick[lo:hi].max()), float(o_snare[lo:hi].max()), float(o_full[lo:hi].max())
         kind = "soft" if f < 0.15 else ("kick" if k >= s else "snare_hi")
         beat_hits.append({"i": i + 1, "t": b, "kind": kind, "kick": round(k, 2), "snare": round(s, 2), "full": round(f, 2)})
