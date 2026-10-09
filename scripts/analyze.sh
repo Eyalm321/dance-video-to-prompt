@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 统一入口：默认 agent 模式；可用 --mode api
+# Unified entry point: agent mode by default; use --mode api for API mode
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,11 +13,11 @@ if [[ -f "$ROOT/config/settings.env" ]]; then
 fi
 
 if [[ $# -lt 1 ]]; then
-  echo "用法:"
-  echo "  bash scripts/analyze.sh <视频>                  # 默认 agent：只抽帧+工作包"
-  echo "  bash scripts/analyze.sh <视频> --mode api       # API 全自动"
-  echo "  bash scripts/extract_frames.sh <视频>           # 同 agent"
-  echo "  bash scripts/analyze_api.sh <视频>              # 同 api"
+  echo "Usage:"
+  echo "  bash scripts/analyze.sh <video>                  # default agent: frame extraction + work package only"
+  echo "  bash scripts/analyze.sh <video> --mode api       # fully automated via API"
+  echo "  bash scripts/extract_frames.sh <video>           # same as agent"
+  echo "  bash scripts/analyze_api.sh <video>              # same as api"
   exit 1
 fi
 

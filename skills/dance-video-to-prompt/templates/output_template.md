@@ -1,58 +1,58 @@
-## 视觉风格
+## Visual Style
 
-{画质、构图、光影、色调。完整句子，适合直接用于视频生成。可点明卡点剪辑感。}
+{Image quality, composition, lighting, color tone. Complete sentences, suitable for direct use in video generation. May call out a beat-synced editing feel.}
 
-## 场景叙述
+## Scene Narrative
 
-{人物身份锚点的连续叙述，建议顺序：
-1）年龄/性别气质 + **整体体型**（高矮+胖瘦/曲线类型）；
-2）**比例**（头身比、腿长占比、肩胯、腰线）；
-3）**分部位轮廓**（肩颈锁骨、胸廓、腰腹、臀胯、腿型、手臂——可见才写）；
-4）**体态习惯**（挺拔/微塌腰/含胸等）；
-5）发型妆容；
-6）**穿搭**：风格标签 + **逐件颜色与款式**（剪裁/长短/腰线/版型；可见材质）；
-7）整体表情气质。
-禁止「身材好/很瘦」「时尚穿搭/衣服好看」等空话；环境细节写到「拍摄场景」，此处不重复。}
+{A continuous narrative that anchors the subject's identity; suggested order:
+1) Age/gender presence + **overall body type** (height impression + build/curve type);
+2) **Proportions** (head-to-body ratio, leg-length ratio, shoulders vs. hips, waistline);
+3) **Contours by body part** (shoulders/neck/collarbones, rib cage, waist/abdomen, hips/glutes, leg shape, arms — only what is visible);
+4) **Posture habits** (upright / slight swayback / rounded shoulders, etc.);
+5) Hairstyle and makeup;
+6) **Outfit**: style tag + **color and style of each piece** (cut/length/waistline/fit; visible materials);
+7) Overall expression and demeanor.
+No empty phrases like "great figure / very slim" or "fashionable outfit / nice clothes"; environment details belong in "Shooting Scene" and are not repeated here.}
 
-## 拍摄场景
+## Shooting Scene
 
-- 场所：{室内/室外/车内/棚拍 + 地点类型 + 空间结构}
-- 空间关系：{人物站位与朝向；与墙/门/家具的距离}
-- 背景：{颜色 + 材质 + 主要元素}
-- 地面：{材质与颜色}
-- 陈设与道具：{环境物件；可互动的非服装道具}
-- 时空与环境光：{时段/天气（可见才写）+ 空间光源位置（顶灯/窗光等）}
-- 氛围：{空间气质}
-- 场景变化：{单场景贯穿 / 切场时间点}
+- Location: {indoor/outdoor/in-car/studio + location type + spatial structure}
+- Spatial relationships: {subject's position and facing direction; distance from walls/doors/furniture}
+- Background: {color + material + main elements}
+- Ground: {material and color}
+- Furnishings and props: {environmental objects; interactive non-clothing props}
+- Time/weather and ambient light: {time of day/weather (only if visible) + position of light sources in the space (ceiling lights/window light, etc.)}
+- Atmosphere: {character of the space}
+- Scene changes: {single continuous scene / timestamps of scene cuts}
 
-（强制：场所类型 + 背景 ≥2 个可见元素（含颜色或材质）+ 人物站位；禁止「场景好看」；不编造未见地标。空间事实写这里，怎么拍写「摄影技术」。）
+(Required: location type + ≥2 visible background elements (including color or material) + subject position; no "the scene looks nice"; do not invent landmarks that are not visible. Spatial facts go here; how it is filmed goes in "Cinematography".)
 
-## 摄影技术
+## Cinematography
 
-- 拍摄方法：{设备与稳定方式（手机/云台/手持）；机位高度与水平角度；整体怎么拍、拍摄意图（想突出体态/表情/服装/环境中的什么）}
-- 运镜：{主运镜类型+方向/速度/路径；有变化按时段写；可写强拍微顿镜头、弱拍跟移；禁止只写「运镜流畅」}
-- 关注重点：{主焦点 + 次焦点：全身比例/腿脚踩点/腰胯转身/手势/面部表情/服装材质/环境空间等；镜头优先保证什么清晰入画}
-- 摄影机：{机位高度、角度、稳定性细节}
-- 镜头：{景别、焦段印象、景深、构图落点}
-- 灯光：{光线方向、软硬、色温倾向、是否逆光/顶光/窗光等}
-- 情绪：{关键词，顿号或逗号分隔}
+- Shooting method: {device and stabilization (phone/gimbal/handheld); camera height and horizontal angle; how it is filmed overall and the shooting intent (what it aims to highlight in posture/expression/clothing/environment)}
+- Camera movement: {main movement type + direction/speed/path; if it changes, describe by time segment; may note brief camera holds on strong beats and follow moves on weak beats; do not just write "smooth camera movement"}
+- Focal emphasis: {primary focus + secondary focus: full-body proportions/footwork on the beat/waist-and-hip turns/hand gestures/facial expression/clothing material/environment and space, etc.; what the shot prioritizes keeping sharp and in frame}
+- Camera: {camera height, angle, stabilization details}
+- Lens: {shot size, apparent focal length, depth of field, compositional placement}
+- Lighting: {light direction, hard/soft, color temperature bias, whether backlit/top-lit/window light, etc.}
+- Mood: {keywords, comma-separated}
 
-（强制：拍摄方法 + 运镜 + 关注重点 三项信息完整可执行；运镜须由跨帧对比得出，切镜勿伪装连续长镜头）
+(Required: shooting method + camera movement + focal emphasis must all be complete and actionable; camera movement must be derived from cross-frame comparison; do not disguise cuts as a continuous long take.)
 
-## 动作清单
+## Action List
 
-1. a.a–b.b秒（对齐拍点 t=… / 强拍）：{左/右支撑腿}；{主动腿+约角度}；{右手手型与动作}，{左手手型与动作}；{髋/躯干幅度}；{视线}；面部：{眉/眼/口/情绪；若有变化写由A转为B}；{卡点说明：踩实/微顿/甩裙等}。
+1. a.a–b.b s (aligned to beat t=… / strong beat): {left/right supporting leg}; {working leg + approx. angle}; {right hand shape and movement}, {left hand shape and movement}; {hip/torso amplitude}; {gaze}; face: {brows/eyes/mouth/emotion; if it changes, write "shifts from A to B"}; {beat-sync note: firm step / brief pause / skirt flick, etc.}.
 2. …
 
-（强制：每条含 **左右肢、角度/幅度、手型、视线、面部表情**；时间轴优先贴合 `rhythm_plan` 拍点；禁止空泛「跳舞/摆pose/表情自然」）
+(Required: every entry must include **left/right limbs, angle/amplitude, hand shape, gaze, facial expression**; the timeline should preferably align with the `rhythm_plan` beats; no vague "dancing / striking a pose / natural expression".)
 
-## 对话/文字
+## Dialogue/Text
 
-- 对话：{无 / 内容}
-- 画面文字：{无 / 内容}
+- Dialogue: {none / content}
+- On-screen text: {none / content}
 
-## 背景声音
+## Background Audio
 
-- 音乐：{风格、**明确 BPM**、情绪；以 rhythm 分析为准}
-- 音效：{无 / 脚步踩点等}
-- 混音与卡点：{一拍一步/强拍动作/大卡点秒数列表}
+- Music: {style, **explicit BPM**, mood; the rhythm analysis takes precedence}
+- Sound effects: {none / footstep hits on the beat, etc.}
+- Mix and beat-sync: {one step per beat / moves on strong beats / list of big beat-hit timestamps in seconds}

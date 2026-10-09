@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# API 版：抽帧 + 视觉 API 三阶段分析 → prompt.md
+# API version: frame extraction + three-stage vision API analysis → prompt.md
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,9 +16,9 @@ LOG_DIR="$ROOT/logs"
 mkdir -p "$LOG_DIR"
 
 if [[ $# -lt 1 ]]; then
-  echo "用法: bash scripts/analyze_api.sh <视频路径> [额外参数...]"
-  echo "示例: bash scripts/analyze_api.sh ./dance.mp4"
-  echo "      bash scripts/analyze_api.sh ./dance.mp4 --interval 0.25 --no-verify"
+  echo "Usage: bash scripts/analyze_api.sh <video_path> [extra args...]"
+  echo "Example: bash scripts/analyze_api.sh ./dance.mp4"
+  echo "         bash scripts/analyze_api.sh ./dance.mp4 --interval 0.25 --no-verify"
   exit 1
 fi
 
@@ -26,7 +26,7 @@ VIDEO="$1"
 shift || true
 
 if [[ ! -f "$VIDEO" ]]; then
-  echo "错误: 视频不存在: $VIDEO"
+  echo "Error: video not found: $VIDEO"
   exit 1
 fi
 

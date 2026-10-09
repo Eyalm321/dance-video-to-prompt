@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从本地视频提取音轨并分析 BPM / 拍点网格 / 能量曲线（无外部 API）。"""
+"""Extract the audio track from a local video and analyze BPM / beat grid / energy curve (no external API)."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ import numpy as np
 logger = logging.getLogger("analyze_rhythm")
 
 def extract_wav(video_path: Path, wav_path: Path) -> bool:
-    """优先 macOS afconvert，其次系统 ffmpeg。"""
+    """Prefer macOS afconvert, then fall back to system ffmpeg."""
     wav_path.parent.mkdir(parents=True, exist_ok=True)
     if shutil.which("afconvert"):
         cmd = [
@@ -34,7 +34,7 @@ def extract_wav(video_path: Path, wav_path: Path) -> bool:
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode == 0 and wav_path.exists() and wav_path.stat().st_size > 1000:
             return True
-        logger.warning("afconvert 失败: %s", (r.stderr or r.stdout or "")[:300])
+        logger.warning("afconvert failed: %s", (r.stderr or r.stdout or "")[:300])
 
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
@@ -64,7 +64,7 @@ def extract_wav(video_path: Path, wav_path: Path) -> bool:
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode == 0 and wav_path.exists() and wav_path.stat().st_size > 1000:
             return True
-        logger.warning("ffmpeg 抽音频失败 code=%s", r.returncode)
+        logger.warning("ffmpeg audio extraction failed code=%s", r.returncode)
 
     return False
 
@@ -76,7 +76,7 @@ def load_mono_wav(path: Path) -> tuple[np.ndarray, int]:
         raw = w.readframes(n)
         width = w.getsampwidth()
     if width != 2:
-        raise ValueError(f"仅支持 16-bit PCM，实际 sample_width={width}")
+        raise ValueError(f"Only 16-bit PCM is supported, got sample_width={width}")
     data = np.frombuffer(raw, dtype=np.int16).astype(np.float32)
     if ch > 1:
         data = data.reshape(-1, ch).mean(axis=1)
@@ -100,7 +100,7 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
         for i in range(0, len(data) - nfft, hop)
     ]
     if not frames:
-        return _empty_result(dur, "音频过短，无法分析")
+        return _empty_result(dur, "Audio too short to analyze")
 
     S = np.array(frames)
     freqs = np.fft.rfftfreq(nfft, 1 / sr)
@@ -136,7 +136,7 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
         scores.append(((c1 + 0.45 * c2) * w, float(bpm), lag))
     scores.sort(reverse=True)
     if not scores:
-        return _empty_result(dur, "无法估计 BPM")
+        return _empty_result(dur, "Could not estimate BPM")
 
     thr = float(np.mean(o) + 0.65 * np.std(o))
     min_gap = max(1, int(0.12 / hop_s))
@@ -210,22 +210,22 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
 
     style_bits: list[str] = []
     if 90 <= best_bpm <= 105:
-        style_bits.append("中慢流行/抒情舞曲常见区间")
+        style_bits.append("Typical range for mid-to-slow pop / ballad dance tracks")
     elif 105 < best_bpm <= 125:
-        style_bits.append("中快流行/卡点舞曲常见区间")
+        style_bits.append("Typical range for mid-to-fast pop / beat-sync dance tracks")
     elif best_bpm > 125:
-        style_bits.append("偏快电子/Dance 区间")
+        style_bits.append("Fast-leaning electronic / Dance range")
     if low_e / tot > 0.45:
-        style_bits.append("低频鼓点/贝斯突出")
+        style_bits.append("Prominent low-end drums / bass")
     if high_e / tot < 0.1:
-        style_bits.append("高频不刺耳，非炸裂 EDM")
+        style_bits.append("Highs are not harsh; not explosive EDM")
     if energy_1s:
         early = float(np.mean([e["rms"] for e in energy_1s[: max(1, len(energy_1s) // 3)]]))
         late = float(np.mean([e["rms"] for e in energy_1s[max(1, 2 * len(energy_1s) // 3) :]]))
         if late > early * 1.25:
-            style_bits.append("后半能量抬升，适合大卡点收尾")
+            style_bits.append("Energy lifts in the second half; suits ending on a big beat-sync hit")
         elif early > late * 1.15:
-            style_bits.append("前半更强，后段可收")
+            style_bits.append("First half is stronger; the ending can wind down")
 
     return {
         "ok": True,
@@ -248,12 +248,12 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
             "high": round(high_e / tot, 3),
         },
         "top_bpm": [{"bpm": b, "score": round(s, 4)} for s, b, _ in scores[:6]],
-        "style_hint": "；".join(style_bits) if style_bits else "中速流行向",
+        "style_hint": "; ".join(style_bits) if style_bits else "Mid-tempo, pop-leaning",
         "kadian_rules": {
-            "default_step": "一拍一步（步频≈BPM）或一拍一关键动作",
-            "strong_beat": "强拍做踩实/微顿/甩肢/甩裙",
-            "accent_beat": "accent_beats 与能量峰值做大卡点",
-            "forbid": "禁止完全无视拍点的匀速无重音动作",
+            "default_step": "One step per beat (step rate ≈ BPM) or one key move per beat",
+            "strong_beat": "On strong beats: plant the step / brief pause / limb snap / skirt flick",
+            "accent_beat": "Hit the big beat-sync moments on accent_beats and energy peaks",
+            "forbid": "Never use constant-speed, unaccented movement that completely ignores the beats",
         },
         "error": None,
     }
@@ -265,10 +265,10 @@ def _empty_result(dur: float, err: str) -> dict[str, Any]:
         "bpm": None,
         "beats": [],
         "error": err,
-        "style_hint": "无可靠节奏；背景声音保守写，动作按画面时间轴",
+        "style_hint": "No reliable rhythm; write Background Audio conservatively and time actions to the visual timeline",
         "kadian_rules": {
-            "default_step": "按画面时间轴描述，不强行卡点",
-            "forbid": "勿编造精确 BPM",
+            "default_step": "Follow the visual timeline; do not force beat-sync",
+            "forbid": "Do not invent a precise BPM",
         },
     }
 
@@ -286,7 +286,7 @@ def analyze_video_rhythm(
 
     if not extract_wav(video_path, wav_path):
         result.update(
-            _empty_result(0.0, "无法抽取音轨（afconvert/ffmpeg 不可用或无音轨）")
+            _empty_result(0.0, "Could not extract the audio track (afconvert/ffmpeg unavailable or no audio track)")
         )
         result["video"] = str(video_path)
         (out_dir / "rhythm_analysis.json").write_text(
@@ -298,8 +298,8 @@ def analyze_video_rhythm(
         data, sr = load_mono_wav(wav_path)
         analysis = analyze_audio(data, sr)
     except Exception as exc:  # noqa: BLE001
-        logger.exception("节奏分析失败")
-        analysis = _empty_result(0.0, f"分析异常: {exc}")
+        logger.exception("Rhythm analysis failed")
+        analysis = _empty_result(0.0, f"Analysis error: {exc}")
 
     analysis["video"] = str(video_path)
     analysis["audio_wav"] = str(wav_path) if keep_wav else None
@@ -310,7 +310,7 @@ def analyze_video_rhythm(
         json.dumps(analysis, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    # 给人读的简报（节奏子代理可直接读）
+    # Human-readable brief (the rhythm sub-agent can read it directly)
     brief = _render_brief(analysis)
     (out_dir / "rhythm_brief.md").write_text(brief, encoding="utf-8")
     return analysis
@@ -318,38 +318,38 @@ def analyze_video_rhythm(
 def _render_brief(a: dict[str, Any]) -> str:
     if not a.get("ok"):
         return (
-            f"# 节奏简报\n\n- 状态：失败\n- 原因：{a.get('error')}\n"
-            f"- 建议：{a.get('style_hint')}\n"
+            f"# Rhythm Brief\n\n- Status: failed\n- Reason: {a.get('error')}\n"
+            f"- Suggestion: {a.get('style_hint')}\n"
         )
     beats = a.get("beats") or []
     accents = a.get("accent_beats") or []
     bars = a.get("bars_4_4") or []
     lines = [
-        "# 节奏简报（供节奏子代理 / 融合阶段使用）",
+        "# Rhythm Brief (for the rhythm sub-agent / fusion stage)",
         "",
-        f"- **BPM**：{a.get('bpm')}（拍间隔 ≈ {a.get('beat_period_sec')}s）",
-        f"- **拍号猜测**：{a.get('time_signature_guess')}",
-        f"- **起拍偏移**：{a.get('downbeat_offset_sec')}s",
-        f"- **风格提示**：{a.get('style_hint')}",
-        f"- **频段**：low/mid/high = {a.get('band_energy_ratio')}",
+        f"- **BPM**: {a.get('bpm')} (beat interval ≈ {a.get('beat_period_sec')}s)",
+        f"- **Time signature guess**: {a.get('time_signature_guess')}",
+        f"- **Downbeat offset**: {a.get('downbeat_offset_sec')}s",
+        f"- **Style hint**: {a.get('style_hint')}",
+        f"- **Frequency bands**: low/mid/high = {a.get('band_energy_ratio')}",
         "",
-        "## 卡点规则",
+        "## Beat-Sync Rules",
     ]
     rules = a.get("kadian_rules") or {}
     for k, v in rules.items():
         lines.append(f"- {k}: {v}")
     lines += [
         "",
-        "## 小节强拍（4/4 bar starts）",
+        "## Bar Downbeats (4/4 bar starts)",
         ", ".join(str(x) for x in bars),
         "",
-        "## 全部拍点",
+        "## All Beats",
         ", ".join(str(x) for x in beats),
         "",
-        "## 建议大卡点（accent）",
-        ", ".join(str(x) for x in accents) if accents else "（能量较匀，用 strong_beats）",
+        "## Suggested Big Beat-Sync Hits (accent)",
+        ", ".join(str(x) for x in accents) if accents else "(energy is fairly even; use strong_beats)",
         "",
-        "## 1 秒能量",
+        "## 1-Second Energy",
     ]
     for e in a.get("energy_1s") or []:
         lines.append(f"- {e['t_start']}-{e['t_end']}s rms={e['rms']}")
@@ -361,21 +361,21 @@ def main(argv: list[str] | None = None) -> int:
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    p = argparse.ArgumentParser(description="视频音轨节奏分析 → rhythm_analysis.json")
-    p.add_argument("video", type=Path, help="视频路径")
+    p = argparse.ArgumentParser(description="Rhythm analysis of a video's audio track → rhythm_analysis.json")
+    p.add_argument("video", type=Path, help="Path to the video")
     p.add_argument(
         "-o",
         "--output-dir",
         type=Path,
         required=True,
-        help="输出目录（与抽帧 OUT_DIR 相同）",
+        help="Output directory (same OUT_DIR as frame extraction)",
     )
-    p.add_argument("--no-keep-wav", action="store_true", help="分析后删除 wav")
+    p.add_argument("--no-keep-wav", action="store_true", help="Delete the wav after analysis")
     args = p.parse_args(argv)
 
     video = args.video.expanduser().resolve()
     if not video.exists():
-        logger.error("视频不存在: %s", video)
+        logger.error("Video does not exist: %s", video)
         return 1
 
     result = analyze_video_rhythm(

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 共用：只抽帧，不调用任何模型 API（Skill 版 / API 版都依赖此脚本）
+# Shared: frame extraction only, no model API calls (both the Skill version and the API version depend on this script)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if [[ $# -lt 1 ]]; then
-  echo "用法: bash scripts/extract_frames.sh <视频路径> [--interval 0.33] [--max-frames 36] [-o 输出目录]"
+  echo "Usage: bash scripts/extract_frames.sh <video_path> [--interval 0.33] [--max-frames 36] [-o output_dir]"
   exit 1
 fi
 

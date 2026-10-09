@@ -1,27 +1,27 @@
-## 视觉风格
+## Visual Style
 
 {visual_style}
 
-## 场景叙述
+## Scene Narrative
 
 {scene_narrative}
 
-## 拍摄场景
+## Shooting Scene
 
 {shooting_scene}
 
-## 摄影技术
+## Cinematography
 
 {cinematography}
 
-## 动作清单
+## Action List
 
 {action_list}
 
-## 对话/文字
+## Dialogue/Text
 
 {dialogue_text}
 
-## 背景声音
+## Background Audio
 
 {background_audio}

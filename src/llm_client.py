@@ -1,4 +1,4 @@
-"""Anthropic 兼容多模态 API 客户端。"""
+"""Anthropic-compatible multimodal API client."""
 
 from __future__ import annotations
 
@@ -44,11 +44,11 @@ class VisionLLMClient:
         self.timeout = timeout
 
         if not self.base_url:
-            raise ValueError("缺少 ANTHROPIC_BASE_URL / VISION_BASE_URL")
+            raise ValueError("Missing ANTHROPIC_BASE_URL / VISION_BASE_URL")
         if not self.api_key:
-            raise ValueError("缺少 ANTHROPIC_AUTH_TOKEN / ANTHROPIC_API_KEY")
+            raise ValueError("Missing ANTHROPIC_AUTH_TOKEN / ANTHROPIC_API_KEY")
         if not self.model:
-            raise ValueError("缺少 VISION_MODEL（需为支持看图的多模态模型）")
+            raise ValueError("Missing VISION_MODEL (must be a multimodal model that supports image input)")
 
     def complete_with_images(
         self,
@@ -87,7 +87,7 @@ class VisionLLMClient:
             "Authorization": f"Bearer {self.api_key}",
             "anthropic-version": "2023-06-01",
         }
-        # 透传自定义头（部分公司网关需要）
+        # Pass through custom headers (required by some corporate gateways)
         custom = os.getenv("ANTHROPIC_CUSTOM_HEADERS", "")
         if custom:
             for part in custom.split(";"):
@@ -97,12 +97,12 @@ class VisionLLMClient:
                     headers[k.strip()] = v.strip()
 
         url = f"{self.base_url}/v1/messages"
-        logger.info("调用视觉模型 model=%s images=%d", self.model, len(image_paths))
+        logger.info("Calling vision model model=%s images=%d", self.model, len(image_paths))
         with httpx.Client(timeout=self.timeout) as client:
             resp = client.post(url, headers=headers, json=payload)
             if resp.status_code >= 400:
                 raise RuntimeError(
-                    f"模型调用失败 HTTP {resp.status_code}: {resp.text[:800]}"
+                    f"Model call failed HTTP {resp.status_code}: {resp.text[:800]}"
                 )
             data = resp.json()
 
@@ -110,7 +110,7 @@ class VisionLLMClient:
 
 
 def _extract_text(data: dict[str, Any]) -> str:
-    # Anthropic messages 格式
+    # Anthropic messages format
     content = data.get("content")
     if isinstance(content, list):
         parts = []
@@ -122,7 +122,7 @@ def _extract_text(data: dict[str, Any]) -> str:
         if parts:
             return "\n".join(parts).strip()
 
-    # 部分网关兼容 OpenAI chat 格式
+    # Some gateways use the OpenAI chat-compatible format
     choices = data.get("choices")
     if isinstance(choices, list) and choices:
         msg = choices[0].get("message") or {}
@@ -130,4 +130,4 @@ def _extract_text(data: dict[str, Any]) -> str:
         if isinstance(text, str):
             return text.strip()
 
-    raise RuntimeError(f"无法解析模型响应: {str(data)[:500]}")
+    raise RuntimeError(f"Unable to parse model response: {str(data)[:500]}")

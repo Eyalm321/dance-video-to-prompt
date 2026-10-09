@@ -1,4 +1,4 @@
-"""两阶段分析：事实观察 → 模板提示词 → 校验。"""
+"""Two-stage analysis: fact observation → template prompt → verification."""
 
 from __future__ import annotations
 
@@ -34,16 +34,16 @@ def analyze_video_to_prompt(
     image_paths = [s.path for s in samples]
     frame_times = ", ".join(f"{s.time_sec:.2f}" for s in samples)
 
-    # 阶段一：事实层
+    # Stage 1: fact layer
     stage1_user = STAGE1_USER_TEMPLATE.format(
         video_name=video_name,
         duration=duration,
         frame_count=len(samples),
         frame_times=frame_times,
     )
-    # 给每张图加时间标注说明
+    # Add a note explaining the time label on each image
     stage1_user = (
-        "以下图片按时间顺序排列，文件名中含时间点。\n" + stage1_user
+        "The following images are in chronological order; each filename contains its timestamp.\n" + stage1_user
     )
     raw_analysis = client.complete_with_images(
         system=STAGE1_SYSTEM,
@@ -54,29 +54,29 @@ def analyze_video_to_prompt(
     )
     analysis = _parse_json_loose(raw_analysis)
     analysis_json = json.dumps(analysis, ensure_ascii=False, indent=2)
-    logger.info("阶段一完成：事实观察 JSON 已解析")
+    logger.info("Stage 1 done: fact-observation JSON parsed")
 
     rhythm_json = json.dumps(rhythm or {}, ensure_ascii=False, indent=2)
 
-    # 阶段二：模板提示词（画面事实 + 节奏融合）
+    # Stage 2: template prompt (visual facts + rhythm fusion)
     stage2_user = STAGE2_USER_TEMPLATE.format(
         duration=duration,
         analysis_json=analysis_json,
         rhythm_json=rhythm_json,
     )
-    # 阶段二可不重复传全部帧，但附带少量关键帧可提升一致性
+    # Stage 2 need not resend every frame, but attaching a few keyframes improves consistency
     key_paths = _pick_key_frames(samples, k=8)
     raw_prompt = client.complete_with_images(
         system=STAGE2_SYSTEM,
-        user_text=stage2_user + "\n\n另附若干关键帧供核对动作与外观。",
+        user_text=stage2_user + "\n\nA few keyframes are also attached for checking actions and appearance.",
         image_paths=key_paths,
         max_tokens=4096,
         temperature=0.3,
     )
     prompt_md = normalize_prompt_markdown(raw_prompt)
-    logger.info("阶段二完成：模板提示词已生成")
+    logger.info("Stage 2 done: template prompt generated")
 
-    # 阶段三：校验
+    # Stage 3: verification
     if verify:
         verify_user = VERIFY_USER_TEMPLATE.format(
             analysis_json=analysis_json,
@@ -91,11 +91,11 @@ def analyze_video_to_prompt(
             temperature=0.1,
         )
         prompt_md = normalize_prompt_markdown(raw_verified)
-        logger.info("校验完成")
+        logger.info("Verification done")
 
     issues = validate_prompt(prompt_md)
     if issues:
-        logger.warning("提示词结构问题: %s", "; ".join(issues))
+        logger.warning("Prompt structure issues: %s", "; ".join(issues))
 
     return {
         "analysis": analysis,
@@ -116,7 +116,7 @@ def _pick_key_frames(samples: list[FrameSample], k: int = 8) -> list[Path]:
 
 def _parse_json_loose(text: str) -> dict[str, Any]:
     text = text.strip()
-    # 去掉代码围栏
+    # Strip code fences
     fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
     if fence:
         text = fence.group(1).strip()
@@ -128,7 +128,7 @@ def _parse_json_loose(text: str) -> dict[str, Any]:
     except json.JSONDecodeError:
         pass
 
-    # 截取第一个 { 到最后一个 }
+    # Slice from the first { to the last }
     start = text.find("{")
     end = text.rfind("}")
     if start >= 0 and end > start:
@@ -139,5 +139,5 @@ def _parse_json_loose(text: str) -> dict[str, Any]:
         except json.JSONDecodeError:
             pass
 
-    logger.warning("事实层 JSON 解析失败，降级为 raw 包装")
+    logger.warning("Fact-layer JSON parse failed; falling back to a raw wrapper")
     return {"raw": text}

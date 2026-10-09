@@ -1,401 +1,401 @@
-# 输出契约
+# Output Contract
 
-最终 `prompt.md` 必须且仅包含以下 7 个二级标题：
+The final `prompt.md` must contain exactly the following 7 second-level headings, and nothing else:
 
-1. `## 视觉风格` — 画质、构图、光影、色调  
-2. `## 场景叙述` — 人物（含 **身材体型特征**）、**穿搭（颜色与样式）**、整体表情气质  
-3. `## 拍摄场景` — 场所、空间关系、背景、地面、陈设、时空与环境光、氛围  
-4. `## 摄影技术` — **拍摄方法、运镜、关注重点**、机位、焦段、灯光、情绪  
-5. `## 动作清单` — 带时间的可生成动作序列 + **分段表情** + **卡点对齐**  
-6. `## 对话/文字` — 对白与字幕  
-7. `## 背景声音` — BGM 风格、**BPM**、与拍点关系  
+1. `## Visual Style` — image quality, composition, light and shadow, color tone  
+2. `## Scene Narrative` — the person (including **body features and build**), **outfit (colors and styles)**, overall expression and demeanor  
+3. `## Shooting Scene` — venue, spatial relationships, background, floor, furnishings, time/place and ambient light, atmosphere  
+4. `## Cinematography` — **shooting method, camera movement, focal emphasis**, camera position, focal length, lighting, mood  
+5. `## Action List` — a timed, generatable action sequence + **per-segment expressions** + **beat-sync alignment**  
+6. `## Dialogue/Text` — dialogue and subtitles  
+7. `## Background Audio` — BGM style, **BPM**, relationship to the beats  
 
-## 产物文件（Agent 模式）
+## Output Files (Agent Mode)
 
-| 文件 | 谁写 | 含义 |
+| File | Written by | Meaning |
 |------|------|------|
-| `frames/` + `frames_meta.json` | 抽帧脚本 | 关键帧（含 sharpness 字段） |
-| `frame_quality.json` | **清晰度脚本** | Laplacian 分数、sharp/rescued/blurry、优先分析列表 |
-| `frame_quality_brief.md` | 清晰度脚本 | 人读简报 |
-| `rhythm_analysis.json` | **本地节奏脚本** | BPM/拍点/能量（数值事实） |
-| `rhythm_brief.md` | 节奏脚本 | 人读简报 |
-| `analysis.json` | **画面代理** | 视觉事实层 |
-| `rhythm_plan.json` | **节奏子代理** | 卡点策略（解释层） |
-| `prompt.md` | **融合阶段（主代理）** | 最终 7 段生成提示词 |
+| `frames/` + `frames_meta.json` | Frame-extraction script | Keyframes (including the sharpness field) |
+| `frame_quality.json` | **Sharpness-check script** | Laplacian scores, sharp/rescued/blurry, priority analysis list |
+| `frame_quality_brief.md` | Sharpness-check script | Human-readable brief |
+| `rhythm_analysis.json` | **Local rhythm script** | BPM/beats/energy (numeric facts) |
+| `rhythm_brief.md` | Rhythm script | Human-readable brief |
+| `analysis.json` | **Visual agent** | Visual fact layer |
+| `rhythm_plan.json` | **Rhythm sub-agent** | Beat-sync strategy (interpretation layer) |
+| `prompt.md` | **Fusion stage (main agent)** | Final 7-section generation prompt |
 
-## 清晰度（看图前强制）
+## Sharpness (mandatory before viewing frames)
 
-1. 先读 `frame_quality.json`  
-2. **优先**分析 `sharp_for_analysis`  
-3. `status=blurry` 的帧：不写可确认级别的手指分型、精确眉眼；可写「快速动作导致模糊」  
-4. `rescued`：描述以替换后的清晰图为准，时间戳仍用原抽帧时刻（报告含 `rescued_offset`）
+1. Read `frame_quality.json` first  
+2. **Prioritize** analyzing `sharp_for_analysis`  
+3. Frames with `status=blurry`: do not write confirmable-level finger shapes or precise brows/eyes; you may write "blurred due to fast motion"  
+4. `rescued`: base the description on the substituted sharp image, but keep the timestamp of the original extracted frame (the report includes `rescued_offset`)
 
-## 人物身材特征（看图 + 输出，强制）
+## Body Features (view frames + output, mandatory)
 
-生成侧高度依赖「人物体型一致性」。画面代理与融合阶段**必须**从清晰帧观察并写入可复现的身材描述，禁止只用「身材好」「很瘦」等空话。
+The generation side depends heavily on "consistency of the person's body shape". The visual agent and the fusion stage **must** observe clear frames and write a reproducible body description; using only empty phrases like "great figure" or "very thin" is forbidden.
 
-### 看图时至少记录（可见则写，不可见不编造）
+### Record at least the following when viewing frames (write if visible; do not invent what is not visible)
 
-| 维度 | 写法要求 | 示例词（择优，勿堆砌） |
+| Dimension | Writing requirement | Example words (pick the best, don't pile them up) |
 |------|----------|------------------------|
-| **整体体型** | 高矮印象 + 胖瘦/骨架感 | 高挑纤细、娇小匀称、中等偏瘦、丰满曲线、健美紧实、微胖圆润 |
-| **身高比例印象** | 相对画面/景别的比例感（非精确 cm） | 腿长占比高、上身偏短、头身比修长、娇小紧凑 |
-| **肩颈与锁骨** | 肩宽窄、溜肩/宽肩、锁骨是否分明 | 窄肩、锁骨清晰、天鹅颈 |
-| **胸廓轮廓** | 含蓄写轮廓与着装贴合度，忌低俗 | 胸部轮廓自然、上身扁平修长、着装勾勒浅弧线 |
-| **腰腹** | 腰线位置、粗细、是否收紧 | 细腰、腰线偏高、小腹平坦、微微收腰 |
-| **臀胯** | 胯宽与臀型（舞蹈/穿搭视频常影响裙摆与站姿） | 胯窄、圆润臀线、沙漏型腰臀比 |
-| **腿型** | 粗细、直/弯、长度感 | 细长直腿、小腿紧实、大腿修长 |
-| **手臂** | 粗细与线条 | 纤细手臂、肩臂线条流畅、前臂偏细 |
-| **体态站姿** | 挺拔/含胸/微前倾/S 曲线等 | 站姿挺拔、微微塌腰、慵懒含胸 |
-| **肤色肌理** | 可见肤色与光泽（可选） | 冷白皮、暖调小麦色、肤质细腻 |
+| **Overall build** | Height impression + slim/full / frame | tall and slender, petite and well-proportioned, medium-slim, full and curvy, athletic and toned, slightly plump and rounded |
+| **Height-proportion impression** | Sense of proportion relative to the frame/shot size (not exact cm) | high leg-to-body ratio, short upper body, long head-to-body ratio, petite and compact |
+| **Shoulders, neck, and collarbones** | Shoulder width, sloping/broad shoulders, whether collarbones are defined | narrow shoulders, defined collarbones, swan neck |
+| **Chest contour** | Describe the contour and garment fit tastefully; avoid vulgarity | natural chest contour, flat and elongated upper body, clothing outlines a gentle curve |
+| **Waist and abdomen** | Waistline position, thickness, whether cinched | slim waist, high waistline, flat stomach, slightly cinched waist |
+| **Hips** | Hip width and hip shape (in dance/outfit videos this often affects the skirt hem and stance) | narrow hips, rounded hip line, hourglass waist-to-hip ratio |
+| **Leg shape** | Thickness, straight/curved, sense of length | long straight slender legs, toned calves, long thighs |
+| **Arms** | Thickness and line | slender arms, smooth shoulder-to-arm line, slim forearms |
+| **Posture and stance** | Upright / rounded chest / slight forward lean / S-curve, etc. | upright stance, slightly arched lower back, languid rounded shoulders |
+| **Skin tone and texture** | Visible skin tone and sheen (optional) | cool fair skin, warm wheat-toned skin, fine skin texture |
 
-### analysis.json（必填字段）
+### analysis.json (required fields)
 
-- `subject.body_type`：整体体型一句话（高矮 + 胖瘦/曲线类型）  
-- `subject.body_proportions`：头身比/腿长/肩胯等比例印象  
-- `subject.body_details`：肩颈、胸廓轮廓、腰腹、臀胯、腿型、手臂等**分部位**描述（可见才写）  
-- `subject.posture_habit`：全片常见体态（挺拔、微塌腰、含胸等）  
-- `subject.appearance`：可保留发型脸型等外貌摘要；**不得替代**上述身材字段  
-- `segments[].body_focus`：本段画面突出的身材部位或体态变化（如「侧身强调细腰与腿长」「转身带出裙摆下的胯线」）；无则写「全身比例保持」
+- `subject.body_type`: one sentence on overall build (height + slim/full / curve type)  
+- `subject.body_proportions`: proportion impressions such as head-to-body ratio / leg length / shoulders vs. hips  
+- `subject.body_details`: **per-body-part** description of shoulders/neck, chest contour, waist/abdomen, hips, legs, arms, etc. (only if visible)  
+- `subject.posture_habit`: posture common throughout the video (upright, slightly arched lower back, rounded chest, etc.)  
+- `subject.appearance`: may keep an appearance summary such as hairstyle and face shape; **must not replace** the body fields above  
+- `segments[].body_focus`: the body part or posture change emphasized in this segment (e.g. "side angle emphasizes the slim waist and long legs", "the turn reveals the hip line under the skirt hem"); if none, write "overall body proportions maintained"
 
-### prompt.md「场景叙述」（强制）
+### prompt.md "Scene Narrative" (mandatory)
 
-人物段必须包含可直接喂给视频模型的**连续身份锚点**，建议顺序：
+The person paragraph must contain a **continuous identity anchor** that can be fed directly to the video model; suggested order:
 
-1. 年龄/性别气质（若可辨）+ 整体体型  
-2. 比例（腿长、腰线、肩胯）  
-3. 分部位轮廓（肩颈、胸廓、腰腹、臀胯、腿臂）  
-4. 体态习惯  
-5. 发型、妆容  
-6. **穿搭**：风格标签 + 逐件 **颜色 + 款式**（见下节）  
-7. 整体表情气质  
+1. Age/gender impression (if discernible) + overall build  
+2. Proportions (leg length, waistline, shoulders vs. hips)  
+3. Per-part contours (shoulders/neck, chest, waist/abdomen, hips, legs/arms)  
+4. Posture habits  
+5. Hairstyle, makeup  
+6. **Outfit**: style tag + item-by-item **color + style** (see the next section)  
+7. Overall expression and demeanor  
 
-环境、背景、地面、陈设写到 **「拍摄场景」**，此处不重复堆砌。
+Environment, background, floor, and furnishings go under **"Shooting Scene"**; do not pile them up here.
 
-**最低要求**：至少写出「整体体型 + 腰腿/肩胯中 ≥2 项可见细节 + 体态」；全身出镜时尽量 4 项以上。穿搭最低要求见下节。
+**Minimum requirement**: write at least "overall build + ≥2 visible details from waist/legs/shoulders/hips + posture"; when the full body is on camera, aim for 4 or more. Minimum outfit requirements are in the next section.
 
-示例（结构示意，勿照抄）：
+Example (structural illustration, do not copy verbatim):
 
-> 一位身材高挑纤细的年轻女性，头身比修长，腿长占比明显，窄肩、锁骨清晰，腰肢纤细、小腹平坦，胯线利落，细长直腿，手臂纤细，站姿挺拔略带舞蹈感；浅棕长卷发齐肩；身着 OL 职场风：白色修身短袖翻领衬衫、领口扣好，黑色高腰包臀迷你裙，黑色漆皮尖头细高跟鞋；看镜头浅笑。
+> A tall, slender young woman with a long head-to-body ratio and noticeably long legs, narrow shoulders and defined collarbones, a slim waist and flat stomach, a clean hip line, long straight slender legs, slender arms, and an upright stance with a slight dancer's poise; light-brown curly hair reaching the shoulders; wearing an OL office style: a white fitted short-sleeve collared shirt buttoned at the neck, a black high-waisted bodycon mini skirt, and black patent pointed-toe stiletto heels; smiling softly at the camera.
 
-禁止：
+Forbidden:
 
-- `身材好`、`很瘦`、`曲线迷人`、`完美身材` 等无信息空话  
-- 对模糊帧/半身/遮挡部位编造精确轮廓  
-- 低俗露骨描写；用「轮廓/线条/比例/着装贴合」措辞即可  
+- Empty, uninformative phrases such as `great figure`, `very thin`, `alluring curves`, `perfect body`  
+- Inventing precise contours for blurry frames / half-body shots / occluded parts  
+- Vulgar or explicit descriptions; wording such as "contour/line/proportion/garment fit" is enough  
 
-### 与动作清单的关系
+### Relationship to the Action List
 
-- 身材特征**主写在场景叙述**（全片身份锚点），动作清单**不重复堆砌**整段体型  
-- 动作条可在涉及体态时点一句（如「塌腰顶髋约 15°，侧面细腰更明显」），与 `body_focus` 呼应  
+- Body features are **primarily written in the Scene Narrative** (the whole-video identity anchor); the Action List **does not re-pile** the full body description  
+- An action entry may mention it in one phrase when posture is involved (e.g. "arch the lower back and push the hip out about 15°, the slim waist more visible in profile"), echoing `body_focus`  
 
-## 穿搭颜色与样式（看图 + 输出，强制）
+## Outfit Colors and Styles (view frames + output, mandatory)
 
-生成侧依赖可复现的服装。禁止只写品类不写颜色，或只用「时尚穿搭」「衣服好看」带过。
+The generation side depends on reproducible clothing. Writing only the garment category without the color, or glossing over it with just "fashionable outfit" or "nice clothes", is forbidden.
 
-### 看图时至少记录（可见则写，不可见不编造）
+### Record at least the following when viewing frames (write if visible; do not invent what is not visible)
 
-| 维度 | 写法要求 | 示例词（择优，勿堆砌） |
+| Dimension | Writing requirement | Example words (pick the best, don't pile them up) |
 |------|----------|------------------------|
-| **整体风格** | 穿搭类型标签 | OL职场、甜妹碎花、运动休闲、泳装、JK、街头、家居、礼服 |
-| **配色** | 主色 + 辅色 + 点缀 | 白+黑+银色配饰；浅粉碎花+米白 |
-| **上装** | 颜色 + 款式/剪裁 + 可见材质 | 白色修身短袖翻领衬衫，领口扣好，袖口挽至小臂 |
-| **下装** | 颜色 + 款式/长短/腰线 | 黑色高腰包臀迷你裙 |
-| **连体/外套** | 同上 | 米色过膝风衣，敞开未扣 |
-| **鞋履** | 颜色 + 鞋型 | 黑色漆皮尖头细高跟鞋 |
-| **袜/打底** | 颜色 + 厚度 | 肤色薄丝袜 |
-| **配饰** | 颜色 + 种类与佩戴位置 | 左手腕银色细手链 |
-| **变装** | 有则写时间点与前后对比 | t=3.2s 脱掉外套，露出白色背心 |
+| **Overall style** | Outfit type tag | OL office, sweet floral, sporty casual, swimwear, JK uniform, streetwear, loungewear, evening gown |
+| **Color palette** | Main color + secondary color + accent | white + black + silver accessories; pale pink floral + off-white |
+| **Top** | Color + style/cut + visible material | white fitted short-sleeve collared shirt, buttoned at the neck, sleeves rolled to the forearms |
+| **Bottom** | Color + style/length/waistline | black high-waisted bodycon mini skirt |
+| **One-piece/outerwear** | Same as above | beige knee-length trench coat, worn open and unbuttoned |
+| **Footwear** | Color + shoe type | black patent pointed-toe stiletto heels |
+| **Socks/hosiery** | Color + thickness | sheer nude stockings |
+| **Accessories** | Color + type and where worn | thin silver bracelet on the left wrist |
+| **Outfit change** | If any, write the time point and a before/after comparison | at t=3.2s takes off the jacket, revealing a white tank top |
 
-### analysis.json（必填字段）
+### analysis.json (required fields)
 
-- `subject.outfit.summary`：整体穿搭一句话（**必须含颜色与款式**）  
-- `subject.outfit.style`：穿搭风格标签  
-- `subject.outfit.palette`：主色 / 辅色 / 点缀  
-- `subject.outfit.items[]`：可见单品；每件含 `slot`（上装/下装/连体/外套/鞋/袜/配饰）、`name`、`color`、`style`（款式/剪裁）；可见再写 `material`、`fit`  
-- `subject.outfit.change`：无 / 变装时刻与前后  
-- `segments[].outfit_note`：本段服装有变化才详写，否则「同全片」
+- `subject.outfit.summary`: one sentence on the overall outfit (**must include colors and styles**)  
+- `subject.outfit.style`: outfit style tag  
+- `subject.outfit.palette`: main / secondary / accent colors  
+- `subject.outfit.items[]`: visible items; each includes `slot` (top/bottom/one-piece/outerwear/shoes/socks/accessory), `name`, `color`, `style` (style/cut); add `material` and `fit` if visible  
+- `subject.outfit.change`: none / the outfit-change moment with before and after  
+- `segments[].outfit_note`: write in detail only if the outfit changes in this segment, otherwise "same as whole video"
 
-旧字段 `subject.outfit` 若写成字符串，必须仍含颜色+款式，不得只写「白衬衫黑裙」而不写剪裁。
+If the legacy field `subject.outfit` is written as a string, it must still include color + style; writing only "white shirt, black skirt" without the cut is not allowed.
 
-### prompt.md「场景叙述」中的服装（强制）
+### Clothing in prompt.md "Scene Narrative" (mandatory)
 
-写完身材与发型后，**必须逐件**写出可见服装的 **颜色 + 样式（款式/剪裁/长短/腰线）**，可加可见材质与版型。
+After writing the body and hairstyle, you **must write item by item** the **color + style (style/cut/length/waistline)** of each visible garment; visible material and fit may be added.
 
-**最低要求**：每件可见主单品（上装、下装或连体、鞋）都有颜色和款式；风格标签至少 1 个。
+**Minimum requirement**: every visible main item (top, bottom or one-piece, shoes) has a color and a style; at least 1 style tag.
 
-禁止：
+Forbidden:
 
-- `时尚穿搭`、`衣服好看`、`一身 look`、`简单着装` 等无信息空话  
-- 只写品类不写颜色（如只写「衬衫+裙子」）  
-- 只写颜色不写款式（如只写「白衬衫黑裙」，不写短袖/高腰/包臀/迷你）  
-- 编造不可见的品牌、印花文字、内侧里料  
+- Empty, uninformative phrases such as `fashionable outfit`, `nice clothes`, `a whole look`, `simple outfit`  
+- Writing only the category without the color (e.g. only "shirt + skirt")  
+- Writing only the color without the style (e.g. only "white shirt, black skirt", without short-sleeve/high-waisted/bodycon/mini)  
+- Inventing invisible brands, printed text, or inner linings  
 
-变装时：场景叙述写清两套（或「由 A 换成 B」），动作清单在换装条轻点，不整段重复。
+For outfit changes: the Scene Narrative clearly describes both outfits (or "changes from A to B"); the Action List mentions it lightly in the change entry without repeating the full description.
 
-## 拍摄场景（看图 + 输出，强制）
+## Shooting Scene (view frames + output, mandatory)
 
-独立模块，记录「拍的是什么地方」。不并入场景叙述，不与摄影技术的运镜/布光操作混写。
+A standalone module recording "what place is being filmed". It is not merged into the Scene Narrative and not mixed with the camera movement/lighting operations of Cinematography.
 
-### 看图时至少记录（可见则写，不可见不编造）
+### Record at least the following when viewing frames (write if visible; do not invent what is not visible)
 
-| 维度 | 写法要求 | 示例词（择优） |
+| Dimension | Writing requirement | Example words (pick the best) |
 |------|----------|----------------|
-| **室内外** | 室内 / 室外 / 车内 / 棚拍 / 混合 | 室内 |
-| **地点类型** | 可复现的场所，勿空泛 | 楼梯间过道、卧室、城市步行街、海边栈道、白墙角落梳妆位 |
-| **空间结构** | 开阔/狭窄、纵深、层高感 | 狭长过道、低矮角落、开阔广场 |
-| **人物站位** | 人与空间的相对位置和朝向 | 靠右侧灰白墙，距半开白门约半步 |
-| **背景层** | 墙/天空/建筑/陈设，含颜色材质 | 灰白墙面有铅笔涂鸦，黑色踢脚 |
-| **地面** | 材质与颜色 | 水泥灰地、浅木地板 |
-| **前景** | 遮挡或近景物件，无则写无 | 无 |
-| **环境陈设** | 不穿在身上的物件 | 半开白门、黑色办公椅、亚克力收纳盒 |
-| **时段天气** | 可见才写 | 白天室内、黄昏逆光、夜景霓虹 |
-| **空间光源** | 环境里灯/窗的位置（空间事实） | 顶灯一块过曝、左侧窗光 |
-| **氛围** | 空间气质 | 冷灰职场过道、温馨卧室 |
-| **场景变化** | 单场景或切场 | 单场景贯穿；或 t=4.0 切到室外 |
+| **Indoor/outdoor** | Indoor / outdoor / in-car / studio / mixed | indoor |
+| **Location type** | A reproducible place, not vague | stairwell corridor, bedroom, city pedestrian street, seaside boardwalk, vanity spot in a white-walled corner |
+| **Spatial structure** | Open/narrow, depth, sense of ceiling height | long narrow corridor, low corner, open plaza |
+| **Subject placement** | The person's position and orientation relative to the space | against the off-white wall on the right, about half a step from a half-open white door |
+| **Background layer** | Walls/sky/buildings/furnishings, with color and material | off-white wall with pencil graffiti, black baseboard |
+| **Floor** | Material and color | gray concrete floor, light wood flooring |
+| **Foreground** | Occluding or close-up objects; write "none" if none | none |
+| **Furnishings** | Objects not worn on the body | half-open white door, black office chair, acrylic storage box |
+| **Time of day / weather** | Only if visible | daytime indoors, dusk backlight, neon night scene |
+| **Spatial light sources** | Position of lamps/windows in the environment (a spatial fact) | an overexposed patch from the ceiling light, window light from the left |
+| **Atmosphere** | The character of the space | cool gray office corridor, cozy bedroom |
+| **Scene changes** | Single scene or scene cut | single scene throughout; or cut to outdoors at t=4.0 |
 
-### analysis.json（必填字段）
+### analysis.json (required fields)
 
-| 字段 | 含义 |
+| Field | Meaning |
 |------|------|
-| `scene.setting_type` | 室内 / 室外 / 车内 / 棚拍 / 混合 |
-| `scene.location` | 地点类型（不编造未见地标名） |
-| `scene.space` | 空间结构 |
-| `scene.subject_placement` | 人物站位与朝向 |
-| `scene.background` | 背景层：颜色 + 材质 + 元素 |
-| `scene.ground` | 地面材质与颜色 |
-| `scene.foreground` | 前景，无则写无 |
-| `scene.props` | 环境陈设与可互动物件 |
-| `scene.time_weather` | 时段与天气（可见才写） |
-| `scene.ambient_light` | 空间光源位置 |
-| `scene.atmosphere` | 空间气质 |
-| `scene.changes` | 单场景贯穿 / 切场时间点 |
-| `segments[].scene_note` | 本段场景有变化才详写，否则「同全片」 |
+| `scene.setting_type` | indoor / outdoor / in-car / studio / mixed |
+| `scene.location` | location type (do not invent landmark names that are not seen) |
+| `scene.space` | spatial structure |
+| `scene.subject_placement` | subject placement and orientation |
+| `scene.background` | background layer: color + material + elements |
+| `scene.ground` | floor material and color |
+| `scene.foreground` | foreground; write "none" if none |
+| `scene.props` | environmental furnishings and interactive objects |
+| `scene.time_weather` | time of day and weather (only if visible) |
+| `scene.ambient_light` | position of spatial light sources |
+| `scene.atmosphere` | character of the space |
+| `scene.changes` | single scene throughout / scene-cut time points |
+| `segments[].scene_note` | write in detail only if the scene changes in this segment, otherwise "same as whole video" |
 
-### prompt.md「拍摄场景」（强制结构）
+### prompt.md "Shooting Scene" (mandatory structure)
 
-必须使用下列条目（可增不可删核心项）：
+The following entries must be used (you may add entries, but must not remove core items):
 
 ```markdown
-## 拍摄场景
-- 场所：{室内外 + 地点类型 + 空间结构}
-- 空间关系：{人物站位与朝向；与墙/门/家具的距离}
-- 背景：{颜色 + 材质 + 主要元素}
-- 地面：{材质与颜色}
-- 陈设与道具：{环境物件；可互动的非服装道具}
-- 时空与环境光：{时段/天气 + 空间光源位置}
-- 氛围：{空间气质}
-- 场景变化：{单场景贯穿 / 切场时间点}
+## Shooting Scene
+- Location: {indoor/outdoor + location type + spatial structure}
+- Spatial relationships: {subject placement and orientation; distance from walls/doors/furniture}
+- Background: {color + material + main elements}
+- Floor: {material and color}
+- Furnishings and props: {environmental objects; interactive non-clothing props}
+- Time and ambient light: {time of day/weather + positions of spatial light sources}
+- Atmosphere: {character of the space}
+- Scene changes: {single scene throughout / scene-cut time points}
 ```
 
-**最低要求**：
+**Minimum requirements**:
 
-1. 「场所」不得为空，须含室内外 + 地点类型  
-2. 「背景」至少 2 个可见元素，且含颜色或材质  
-3. 「空间关系」须写出人物站位  
-4. 多场景时「场景变化」必须写切场时间点  
+1. "Location" must not be empty and must include indoor/outdoor + location type  
+2. "Background" has at least 2 visible elements and includes color or material  
+3. "Spatial relationships" must state the subject placement  
+4. With multiple scenes, "Scene changes" must state the scene-cut time points  
 
-禁止：
+Forbidden:
 
-- `场景好看`、`背景高级`、`氛围感强`、`环境出片` 等无信息空话  
-- 编造画面看不出的城市名、店铺名、地标  
-- 把运镜/机位写进本段（那是「摄影技术」）  
-- 把身材和穿搭写进本段（那是「场景叙述」）  
+- Empty, uninformative phrases such as `nice scene`, `classy background`, `strong vibe`, `photogenic environment`  
+- Inventing city names, shop names, or landmarks that cannot be seen in the frame  
+- Writing camera movement/camera position in this section (that belongs to "Cinematography")  
+- Writing body and outfit in this section (that belongs to "Scene Narrative")  
 
-### 与相邻模块的边界
+### Boundaries with Adjacent Modules
 
-| 模块 | 写什么 |
+| Module | What to write |
 |------|--------|
-| **场景叙述** | 人：身材、发型妆容、穿搭颜色与样式、气质 |
-| **拍摄场景** | 地：场所、站位、背景地面、陈设、时空 |
-| **摄影技术** | 怎么拍：机位、运镜、镜头关注、布光操作 |
+| **Scene Narrative** | The person: body, hair and makeup, outfit colors and styles, demeanor |
+| **Shooting Scene** | The place: venue, placement, background and floor, furnishings, time and space |
+| **Cinematography** | How it is shot: camera position, camera movement, camera focus, lighting setup |
 
-手持道具（杯子、手机）可在拍摄场景「陈设与道具」点名，动作清单只写手如何握/举。
+Handheld props (cups, phones) may be named under "Furnishings and props" in Shooting Scene; the Action List only writes how the hand grips/raises them.
 
-## 拍摄方法 / 运镜 / 关注重点（看图 + 输出，强制）
+## Shooting Method / Camera Movement / Focal Emphasis (view frames + output, mandatory)
 
-生成侧依赖可执行的镜头语言。画面代理须**跨帧对比**推断运镜（单帧不够），禁止只写「手机拍摄」「镜头好看」等空话。
+The generation side depends on executable camera language. The visual agent must infer camera movement by **comparing across frames** (a single frame is not enough); writing only empty phrases like "shot on a phone" or "nice camera work" is forbidden.
 
-### 看图时至少记录
+### Record at least the following when viewing frames
 
-| 维度 | 写法要求 | 示例词（择优） |
+| Dimension | Writing requirement | Example words (pick the best) |
 |------|----------|----------------|
-| **设备/质感** | 手机竖屏直出 / 稳定器 / 轻微手持晃动 / 类电影感 | 竖屏手机、云台跟拍、轻微手持呼吸感 |
-| **机位高度** | 相对人物眼平 | 眼平、微仰、低机位仰拍、微俯、高机位俯拍 |
-| **拍摄角度** | 水平方位与主体朝向关系 | 正面、3/4 侧、正侧、微过肩、环绕中的某段 |
-| **景别** | 主体占画比例（可写主景别 + 变化） | 全身、七分身、半身、中近景、特写、脚部特写 |
-| **构图** | 主体落点与留白 | 居中、偏左/右三分、下半身留白强调腿长、头顶安全距 |
-| **运镜类型** | 全片主运镜 + 关键变化（跨帧判断） | 固定、手持微晃、横移/侧移、推进/拉远、升降、环绕、跟随、甩镜 |
-| **运镜节奏** | 速度、是否贴拍点 | 匀速慢推、强拍微顿、弱拍跟移、卡点急推半步 |
-| **焦点/景深** | 清晰主体与虚化程度 | 全身清晰、背景轻度虚化、脸部合焦、前后景分离 |
-| **关注重点** | 镜头**在拍什么/想展示什么**（核心） | 见下表 |
-| **稳定性** | 稳或晃的程度 | 云台极稳、走路跟拍微颤、动作导致轻微运动模糊 |
+| **Device/texture** | Straight-from-phone vertical / stabilizer / slight handheld shake / cinematic-like | vertical phone, gimbal follow shot, slight handheld breathing feel |
+| **Camera height** | Relative to the person's eye level | eye level, slightly low angle, low-angle upward shot, slightly high angle, high-angle downward shot |
+| **Shooting angle** | Horizontal bearing relative to the subject's facing direction | frontal, 3/4 side, full profile, slight over-the-shoulder, a portion of an orbit |
+| **Shot size** | Proportion of the frame occupied by the subject (may write main shot size + changes) | full body, knee-up, half body, medium close-up, close-up, foot close-up |
+| **Composition** | Subject placement and negative space | centered, left/right third, space below the lower body to emphasize leg length, headroom above |
+| **Camera movement type** | Main camera movement for the whole video + key changes (judged across frames) | static, slight handheld shake, truck/lateral move, push in/pull out, crane up/down, orbit, follow, whip pan |
+| **Camera movement rhythm** | Speed, whether it hugs the beats | steady slow push, micro-pause on strong beats, follow move on weak beats, quick half-step push on a beat-sync hit |
+| **Focus/depth of field** | Sharp subject and degree of blur | full body sharp, background lightly blurred, face in focus, foreground/background separation |
+| **Focal emphasis** | What the camera **is shooting / wants to show** (core) | see the table below |
+| **Stability** | Degree of steadiness or shake | gimbal rock-steady, slight tremor from a walking follow shot, slight motion blur caused by the movement |
 
-### 运镜关注重点（`camera_focus` / 分段 `shot_focus`）
+### Camera Focal Emphasis (`camera_focus` / per-segment `shot_focus`)
 
-必须写清「镜头注意力落在哪」，至少选 1 个主焦点，可写次焦点：
+You must clearly state "where the camera's attention lands"; choose at least 1 primary focus, and optionally a secondary focus:
 
-| 关注类型 | 适用场景 | 写法示例 |
+| Focus type | Applicable scenarios | Writing example |
 |----------|----------|----------|
-| **全身比例/体态** | 舞蹈、姿态展示 | 始终框住全身，强调头身比与站姿线条 |
-| **腿部/脚步** | 步伐、踩点、裙摆 | 偏低机位照顾脚尖落地与步伐轨迹 |
-| **腰胯/转身** | 扭胯、转体、卡点 | 腰线与胯线居中，侧面强调 S 曲线 |
-| **上身/手势** | 手部动作、比心、整理衣领 | 半身景别，手型清晰入画 |
-| **面部/表情** | 表情戏、对镜口播感 | 中近景，眼睛合焦，表情可读 |
-| **服装/材质** | 穿搭、变装 | 跟拍面料垂坠、印花与剪裁细节 |
-| **环境/场景** | 旅行打卡、街拍 | 人物与背景同权重，交代空间 |
-| **道具/互动** | 手机、杯子、门、镜子 | 道具与手的接触点保持清晰 |
+| **Full-body proportions/posture** | Dance, pose showcase | always frame the full body, emphasize the head-to-body ratio and stance lines |
+| **Legs/footwork** | Steps, stepping on the beat, skirt hem | slightly low camera position to capture toe landings and step paths |
+| **Waist/hips/turns** | Hip sways, body turns, beat-sync hits | waistline and hip line centered, profile emphasizing the S-curve |
+| **Upper body/gestures** | Hand movements, finger hearts, adjusting the collar | half-body shot size, hand shapes clearly in frame |
+| **Face/expression** | Expression-driven acting, talking-to-camera feel | medium close-up, eyes in focus, expression readable |
+| **Clothing/material** | Outfits, outfit changes | follow the fabric drape, print and cut details |
+| **Environment/scene** | Travel check-ins, street photography | person and background equally weighted, establishing the space |
+| **Props/interaction** | Phone, cup, door, mirror | keep the contact point between prop and hand sharp |
 
-### 如何从关键帧推断运镜（强制方法）
+### How to Infer Camera Movement from Keyframes (mandatory method)
 
-1. 对比相邻清晰帧：主体在画面中的**位置缩放** → 推/拉；**左右偏移** → 横移/跟移；**上下** → 升降/俯仰变化  
-2. 背景相对人物的滑动方向与速度 → 区分「机位动」还是「人在动、机位固定」  
-3. 景别突变且无连续位移 → 可能是**切镜/跳切**（在摄影技术中注明，勿伪装成一条连续运镜）  
-4. 模糊帧多、边缘拖影 → 可写快速动作或甩镜，但**不编造**精确路径  
-5. 有节奏数据时：运镜停顿/加速是否对齐 accent（融合阶段可增强「强拍微顿镜头」）
+1. Compare adjacent sharp frames: the subject's **position/scale** in the frame → push/pull; **left/right offset** → truck/follow; **up/down** → crane/tilt changes  
+2. Direction and speed of the background sliding relative to the person → distinguish "the camera moves" from "the person moves while the camera stays fixed"  
+3. Abrupt shot-size change with no continuous displacement → possibly a **cut/jump cut** (note it in Cinematography; do not disguise it as one continuous camera move)  
+4. Many blurry frames, edge smearing → you may write fast motion or a whip pan, but **do not invent** a precise path  
+5. When rhythm data exists: check whether camera pauses/accelerations align with accents (the fusion stage may enhance this as "camera micro-pause on strong beats")
 
-### analysis.json（必填字段）
+### analysis.json (required fields)
 
-全片 `camera`：
+Whole-video `camera`:
 
-| 字段 | 含义 |
+| Field | Meaning |
 |------|------|
-| `camera.device_feel` | 设备与稳定感（手机/云台/手持等） |
-| `camera.height` | 机位高度（眼平/微仰/低机位等） |
-| `camera.angle` | 拍摄角度（正面/3/4 侧等） |
-| `camera.framing` | 主景别 + 构图习惯 |
-| `camera.movement` | 主运镜类型 + 速度/路径（一句话可执行） |
-| `camera.movement_rhythm` | 运镜与节奏关系（匀速/强拍顿/无节奏关联） |
-| `camera.depth_of_field` | 景深与合焦主体 |
-| `camera.focus_priority` | **全片镜头关注重点**（主+次，对应上表） |
-| `camera.shot_method` | **拍摄方法综述**（2~4 句：怎么拍、为何这样拍、想突出什么） |
+| `camera.device_feel` | device and sense of stability (phone/gimbal/handheld, etc.) |
+| `camera.height` | camera height (eye level/slightly low angle/low camera position, etc.) |
+| `camera.angle` | shooting angle (frontal/3/4 side, etc.) |
+| `camera.framing` | main shot size + composition habits |
+| `camera.movement` | main camera movement type + speed/path (one executable sentence) |
+| `camera.movement_rhythm` | relationship between camera movement and rhythm (steady/micro-pause on strong beats/no rhythmic link) |
+| `camera.depth_of_field` | depth of field and in-focus subject |
+| `camera.focus_priority` | **Whole-video camera focal emphasis** (primary + secondary, corresponding to the table above) |
+| `camera.shot_method` | **Shooting method overview** (2~4 sentences: how it is shot, why it is shot this way, what it wants to highlight) |
 
-分段（运镜或焦点有变化时必填，无变化可写「同全片」）：
+Per segment (required when camera movement or focus changes; if unchanged, you may write "same as whole video"):
 
-| 字段 | 含义 |
+| Field | Meaning |
 |------|------|
-| `segments[].shot_size` | 本段景别 |
-| `segments[].camera_move` | 本段运镜（固定/推/跟…） |
-| `segments[].shot_focus` | 本段镜头关注重点（脸/手/腿/全身/服装…） |
+| `segments[].shot_size` | shot size of this segment |
+| `segments[].camera_move` | camera movement of this segment (static/push/follow...) |
+| `segments[].shot_focus` | camera focal emphasis of this segment (face/hands/legs/full body/clothing...) |
 
-### prompt.md「摄影技术」（强制结构）
+### prompt.md "Cinematography" (mandatory structure)
 
-必须使用下列条目（可增不可删核心项）：
+The following entries must be used (you may add entries, but must not remove core items):
 
 ```markdown
-## 摄影技术
-- 拍摄方法：{设备/稳定方式 + 机位高度与角度 + 整体怎么拍、想突出什么}
-- 运镜：{主运镜路径与速度；有变化则按时段简述；可写强拍微顿/弱拍跟移}
-- 关注重点：{主焦点 + 次焦点；镜头始终优先保证什么入画/清晰}
-- 摄影机：{机位高度、水平角度、稳定性}
-- 镜头：{景别/焦段印象/景深/构图}
-- 灯光：{光线方向、软硬、是否逆光/顶光等}
-- 情绪：{关键词}
+## Cinematography
+- Shooting method: {device/stabilization + camera height and angle + how it is shot overall and what it wants to highlight}
+- Camera movement: {main camera movement path and speed; if it changes, summarize by time range; may write micro-pause on strong beats / follow move on weak beats}
+- Focal emphasis: {primary focus + secondary focus; what the camera always prioritizes keeping in frame/sharp}
+- Camera: {camera height, horizontal angle, stability}
+- Lens: {shot size / focal-length impression / depth of field / composition}
+- Lighting: {light direction, hard/soft, whether backlit/top-lit, etc.}
+- Mood: {keywords}
 ```
 
-**最低要求**：
+**Minimum requirements**:
 
-1. 「拍摄方法」不得为空，且须说明**机位 + 稳定方式 + 拍摄意图**  
-2. 「运镜」须写出可执行动作（方向/推拉/跟随），禁止仅「动态镜头」  
-3. 「关注重点」须明确主体焦点（至少 1 主 1 次，或明确「仅全身」）  
-4. 有节奏且 `ok=true` 时，尽量写清运镜与拍点的关系  
+1. "Shooting method" must not be empty and must state **camera position + stabilization + shooting intent**  
+2. "Camera movement" must describe an executable move (direction/push-pull/follow); just "dynamic camera" is forbidden  
+3. "Focal emphasis" must specify the subject focus (at least 1 primary and 1 secondary, or explicitly "full body only")  
+4. When there is rhythm and `ok=true`, describe the relationship between camera movement and beats as clearly as possible  
 
-禁止：
+Forbidden:
 
-- `运镜流畅`、`电影感镜头`、`专业拍摄`、`镜头感强` 等无信息空话  
-- 把切镜写成一条不可能的连续长镜头  
-- 编造画面看不出的航拍/轨道/电影级设备（除非质感明显支持，可写「类…质感」）
+- Empty, uninformative phrases such as `smooth camera movement`, `cinematic shots`, `professional filming`, `great camera sense`  
+- Writing a cut as an impossible continuous long take  
+- Inventing aerial/dolly-track/cinema-grade equipment that cannot be seen in the frame (unless the texture clearly supports it, in which case write "...-like texture")
 
-### 与动作清单的关系
+### Relationship to the Action List
 
-- 运镜与关注重点**主写在摄影技术**  
-- 动作条可在景别切换或焦点变化时轻点（如「镜头略降照顾右脚踩点」），不整段重复摄影段落  
+- Camera movement and focal emphasis are **primarily written in Cinematography**  
+- An action entry may lightly mention a shot-size switch or focus change (e.g. "camera dips slightly to catch the right foot landing on the beat") without repeating the whole cinematography paragraph  
 
-## 面部表情（看图 + 输出，强制）
+## Facial Expression (view frames + output, mandatory)
 
-### 看图时每帧/每段至少记
+### Record at least the following per frame/segment when viewing frames
 
-| 部位 | 可选描述 |
+| Feature | Optional descriptions |
 |------|----------|
-| 眉 | 舒展 / 微蹙 / 上挑 / 紧拧 |
-| 眼 | 睁大 / 眯眼 / 垂目 / 直视 / 斜睇 / 含笑眼 |
-| 口 | 闭合抿唇 / 微张 / 露齿笑 / 大笑 / 嘟嘴 / 咬唇 |
-| 情绪标签 | 冷艳、甜笑、无辜、慵懒、俏皮、自信、温柔 等 |
-| 变化 | 相对上一段：由 A 转为 B；或「表情保持…」 |
+| Brows | relaxed / slightly furrowed / raised / tightly knitted |
+| Eyes | wide open / squinting / downcast / looking straight ahead / sidelong glance / smiling eyes |
+| Mouth | closed with pursed lips / slightly open / toothy smile / laughing / pouting / biting lip |
+| Emotion tag | cool and glamorous, sweet smile, innocent, languid, playful, confident, gentle, etc. |
+| Change | Relative to the previous segment: from A to B; or "expression holds..." |
 
 ### analysis.json
 
-- `subject.expression_gaze`：全片基调（表情 + 视线习惯）  
-- `segments[].expression`：本段主表情（眉眼口 + 情绪 + 变化）  
-- `segments[].action`：肢体描述末尾带视线与表情落地  
-- `segments[].beat_hint`：融合阶段可填对齐拍点  
-- `segments[].body_focus`：本段突出的身材/体态焦点（见身材节）  
-- `segments[].outfit_note`：本段服装变化（见穿搭节）  
-- `segments[].scene_note`：本段场景变化（见拍摄场景节）  
-- `segments[].shot_size` / `camera_move` / `shot_focus`：本段景别、运镜、镜头关注点（见摄影节）  
+- `subject.expression_gaze`: whole-video baseline (expression + gaze habits)  
+- `segments[].expression`: main expression of this segment (brows/eyes/mouth + emotion + change)  
+- `segments[].action`: limb description ending with where the gaze and expression land  
+- `segments[].beat_hint`: the fusion stage may fill in the aligned beats  
+- `segments[].body_focus`: body/posture focus emphasized in this segment (see the body section)  
+- `segments[].outfit_note`: outfit change in this segment (see the outfit section)  
+- `segments[].scene_note`: scene change in this segment (see the Shooting Scene section)  
+- `segments[].shot_size` / `camera_move` / `shot_focus`: shot size, camera movement, and camera focal emphasis of this segment (see the cinematography section)  
 
-### prompt.md 动作清单
+### prompt.md Action List
 
-每条末尾必须有可执行表情句。  
-时间轴**优先对齐** `rhythm_plan.accent_times` / `beats`（若 `rhythm_analysis.ok=true`）。
+Each entry must end with an executable expression sentence.  
+The timeline is **preferentially aligned** to `rhythm_plan.accent_times` / `beats` (if `rhythm_analysis.ok=true`).
 
-禁止：`表情自然`、`神态好`、`有感觉` 等空话。
+Forbidden: empty phrases such as `natural expression`, `good look`, `has feeling`.
 
-## 画面 × 节奏融合（强制）
+## Visuals × Rhythm Fusion (mandatory)
 
-当 `rhythm_analysis.json` 中 `ok=true` 时：
+When `ok=true` in `rhythm_analysis.json`:
 
-1. **动作清单时间**尽量落在拍点附近（允许 ±0.05~0.1s 取整）  
-2. **强拍 / accent** 必须有可感知的重音动作：踩实、微顿、甩裙、甩臂、定格半拍等  
-3. **背景声音**必须写出 **BPM 数字** + 卡点关系（一拍一步 / 大卡点秒数）  
-4. 画面事实优先：不能为了卡点编造画面没有的服装/道具；可把已有动作的**时机与力度**改到拍上  
-5. 若原片动作匀速但音乐有拍 → 生成提示词按「卡点化增强」写，并在背景声音说明  
+1. **Action List timings** should land near beats as much as possible (rounding of ±0.05~0.1s allowed)  
+2. **Strong beats / accents** must have a perceptible accented move: firm step, micro-pause, skirt flick, arm swing, half-beat freeze, etc.  
+3. **Background Audio** must state the **BPM number** + the beat-sync relationship (one step per beat / timestamps of major beat-sync hits in seconds)  
+4. Visual facts take priority: do not invent clothing/props absent from the frames for the sake of beat-sync; you may shift the **timing and force** of existing moves onto the beat  
+5. If the original footage's moves are steady but the music has a beat → write the generation prompt as a "beat-sync enhancement" and note this in Background Audio  
 
-当 `ok=false`（无音轨/分析失败）：
+When `ok=false` (no audio track / analysis failed):
 
-- 不强行写假 BPM  
-- 动作按画面时间轴  
-- 背景声音保守猜测  
+- Do not force a fake BPM  
+- Actions follow the visual timeline  
+- Background Audio is a conservative guess  
 
-## 动作清单规范（强制）
+## Action List Specification (mandatory)
 
-### 条数与时间
+### Entry Count and Timing
 
-- 按时长切分：约每 0.5~1.5 秒一条；有拍点时按 **1~2 拍** 或关键 accent 聚合  
-- ≤10s 建议 6~12 条，更长可 12~16 条  
-- 每步格式：`N. 开始–结束秒（拍点/强拍可选）：……`  
-- 禁止空泛词：如「跳舞」「摆 pose」「做手势」
+- Split by duration: roughly one entry every 0.5~1.5 seconds; when beats exist, group by **1~2 beats** or by key accents  
+- For ≤10s, 6~12 entries are recommended; longer videos may use 12~16  
+- Format of each step: `N. start–end seconds (beat/strong beat, optional): ...`  
+- Vague words are forbidden: e.g. "dance", "strike a pose", "make a gesture"
 
-### 每条动作必须同时包含以下 5 类信息
+### Every Action Entry Must Include All 5 of the Following
 
-| 必含项 | 写法要求 | 示例 |
+| Required item | Writing requirement | Example |
 |--------|----------|------|
-| **左右肢** | 明确左/右手、左/右腿、支撑腿 | 右腿屈膝抬起，左腿支撑 |
-| **角度/幅度** | 抬腿/转体/开臂的大致角度或幅度 | 右腿前抬约 45° |
-| **手型** | 掌心朝向、指型、握拳/摊开等 | 右手食指点颊，左掌心向上 |
-| **视线** | 看镜头 / 低头 / 侧看 等 | 直视镜头 |
-| **面部表情** | 眉 + 眼 + 口 + 情绪；变化写「由…转为…」 | 眉梢上扬，露齿笑 |
+| **Left/right limbs** | Specify left/right hand, left/right leg, supporting leg | right knee bent and raised, left leg supporting |
+| **Angle/amplitude** | Approximate angle or amplitude of the leg lift/body turn/arm opening | right leg raised forward about 45° |
+| **Hand shape** | Palm orientation, finger shape, fist/open, etc. | right index finger touches the cheek, left palm facing up |
+| **Gaze** | Looking at the camera / looking down / looking sideways, etc. | looking straight into the camera |
+| **Facial expression** | Brows + eyes + mouth + emotion; for changes write "from ... to ..." | brows raised, toothy smile |
 
-有节奏数据时额外建议：
+When rhythm data exists, the following is also recommended:
 
-| 项 | 要求 |
+| Item | Requirement |
 |----|------|
-| **卡点** | 写明踩拍/微顿/甩肢等与强拍关系 |
+| **Beat-sync** | State the relationship to strong beats: stepping on the beat / micro-pause / limb flick, etc. |
 
-### 校验清单（写完自查）
+### Checklist (self-check after writing)
 
-- [ ] 场景叙述是否含 **整体体型 + ≥2 项身材分部位/比例细节 + 体态**  
-- [ ] `analysis.json` 是否填写 `body_type` / `body_proportions` / `body_details` / `posture_habit`  
-- [ ] 场景叙述穿搭是否 **逐件含颜色 + 款式**；风格标签至少 1 个  
-- [ ] `analysis.json` 的 `subject.outfit` 是否填写 `summary` / `style` / `palette` / `items`（每件 `color`+`style`）  
-- [ ] 是否含独立章节 **拍摄场景**（场所 + 背景 ≥2 元素 + 人物站位）  
-- [ ] `analysis.json` 的 `scene` 是否填写 `setting_type` / `location` / `subject_placement` / `background` 等核心字段  
-- [ ] 拍摄场景未与场景叙述/摄影技术重复堆砌  
-- [ ] 摄影技术是否含 **拍摄方法 + 运镜 + 关注重点**（非空话）  
-- [ ] `analysis.json` 的 `camera` 是否填写 `shot_method` / `movement` / `focus_priority` 等核心字段  
-- [ ] 运镜是否由跨帧对比得出；切镜未伪装成长镜头  
-- [ ] 每条动作是否有时间范围  
-- [ ] 每条是否写清左/右、角度、手型、视线、面部  
-- [ ] 若有节奏文件：BPM 是否写入背景声音  
-- [ ] 若有 accent：大卡点是否在动作清单体现  
-- [ ] 未编造画面没有的关键内容（含不可见的身材部位、看不出的专业器材、未见地标、不可见品牌）  
+- [ ] Does the Scene Narrative include **overall build + ≥2 per-part/proportion body details + posture**  
+- [ ] Are `body_type` / `body_proportions` / `body_details` / `posture_habit` filled in `analysis.json`  
+- [ ] Does the Scene Narrative outfit include **color + style for each item**; at least 1 style tag  
+- [ ] Are `summary` / `style` / `palette` / `items` (each with `color`+`style`) filled in `subject.outfit` of `analysis.json`  
+- [ ] Is there a standalone **Shooting Scene** section (venue + ≥2 background elements + subject placement)  
+- [ ] Are core fields such as `setting_type` / `location` / `subject_placement` / `background` filled in `scene` of `analysis.json`  
+- [ ] Shooting Scene does not redundantly repeat the Scene Narrative/Cinematography  
+- [ ] Does Cinematography include **shooting method + camera movement + focal emphasis** (not empty phrases)  
+- [ ] Are core fields such as `shot_method` / `movement` / `focus_priority` filled in `camera` of `analysis.json`  
+- [ ] Was the camera movement derived from cross-frame comparison; cuts not disguised as long takes  
+- [ ] Does every action have a time range  
+- [ ] Does every entry clearly state left/right, angle, hand shape, gaze, face  
+- [ ] If there is a rhythm file: is the BPM written into Background Audio  
+- [ ] If there are accents: are the major beat-sync hits reflected in the Action List  
+- [ ] No key content invented that is not in the frames (including invisible body parts, undetectable professional equipment, unseen landmarks, invisible brands)  

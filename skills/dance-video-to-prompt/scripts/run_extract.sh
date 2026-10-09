@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 抽帧封装：自动定位 REPO_ROOT，不调用模型 API
+# Frame extraction wrapper: auto-locates REPO_ROOT, does not call any model API
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,7 +10,7 @@ resolve_repo_root() {
     return
   fi
 
-  # skills/dance-video-to-prompt → 上两级为仓库根
+  # skills/dance-video-to-prompt → two levels up is the repo root
   local cand
   cand="$(cd "$SKILL_DIR/../.." && pwd)"
   if [[ -x "$cand/scripts/extract_frames.sh" ]]; then
@@ -18,14 +18,14 @@ resolve_repo_root() {
     return
   fi
 
-  # .grok/skills/dance-video-to-prompt → 上三级
+  # .grok/skills/dance-video-to-prompt → three levels up
   cand="$(cd "$SKILL_DIR/../../.." && pwd)"
   if [[ -x "$cand/scripts/extract_frames.sh" ]]; then
     echo "$cand"
     return
   fi
 
-  # 默认：仓库根（skills/xxx 的上两级）
+  # Default: repo root (two levels above skills/xxx)
   echo "$(cd "$SKILL_DIR/../.." && pwd)"
 }
 
@@ -33,8 +33,8 @@ REPO_ROOT="$(resolve_repo_root)"
 EXTRACT="$REPO_ROOT/scripts/extract_frames.sh"
 
 if [[ ! -f "$EXTRACT" ]]; then
-  echo "错误: 找不到抽帧脚本: $EXTRACT"
-  echo "请设置 DANCE_VIDEO_PROMPT_ROOT 指向项目根目录"
+  echo "Error: frame extraction script not found: $EXTRACT"
+  echo "Please set DANCE_VIDEO_PROMPT_ROOT to point to the project root directory"
   exit 1
 fi
 

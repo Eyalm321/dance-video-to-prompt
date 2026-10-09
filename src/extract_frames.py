@@ -1,4 +1,4 @@
-"""从本地短视频高密度抽取关键帧。"""
+"""Densely extract keyframes from a local short video."""
 
 from __future__ import annotations
 
@@ -28,29 +28,29 @@ def extract_frames(
     max_frames: int = 36,
 ) -> tuple[list[FrameSample], float]:
     """
-    按固定时间间隔抽帧，并保证包含首尾帧。
-    返回 (帧列表, 视频时长秒)。
+    Extract frames at a fixed time interval, always including the first and last frames.
+    Returns (frame list, video duration in seconds).
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
-        raise RuntimeError(f"无法打开视频: {video_path}")
+        raise RuntimeError(f"Could not open video: {video_path}")
 
     fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     duration = frame_count / fps if frame_count > 0 else 0.0
 
     if duration <= 0:
-        # 回退：逐帧读取估算
+        # Fallback: estimate by reading frame by frame
         duration = _probe_duration_by_read(cap, fps)
         cap.release()
         cap = cv2.VideoCapture(str(video_path))
 
     if duration <= 0:
         cap.release()
-        raise RuntimeError(f"无法读取视频时长: {video_path}")
+        raise RuntimeError(f"Could not read video duration: {video_path}")
 
-    # 目标时间点：均匀间隔 + 首尾
+    # Target timestamps: uniform interval + first and last
     times: list[float] = []
     t = 0.0
     while t < duration - 1e-6:
@@ -60,7 +60,7 @@ def extract_frames(
     if not times or abs(times[-1] - end_t) > 0.05:
         times.append(end_t)
 
-    # 过多则均匀下采样，始终保留首尾
+    # If there are too many, downsample uniformly, always keeping the first and last
     if len(times) > max_frames:
         times = _downsample_keep_ends(times, max_frames)
 
@@ -70,7 +70,7 @@ def extract_frames(
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
         ok, frame = cap.read()
         if not ok or frame is None:
-            logger.warning("跳过无法读取的帧 t=%.3fs idx=%s", time_sec, frame_idx)
+            logger.warning("Skipping unreadable frame t=%.3fs idx=%s", time_sec, frame_idx)
             continue
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -89,10 +89,10 @@ def extract_frames(
 
     cap.release()
     if not samples:
-        raise RuntimeError(f"未能抽取任何帧: {video_path}")
+        raise RuntimeError(f"Failed to extract any frames: {video_path}")
 
     logger.info(
-        "抽帧完成: duration=%.2fs frames=%d interval=%.2fs",
+        "Frame extraction done: duration=%.2fs frames=%d interval=%.2fs",
         duration,
         len(samples),
         interval_sec,
@@ -105,14 +105,14 @@ def _downsample_keep_ends(times: list[float], max_frames: int) -> list[float]:
         return [times[0]]
     if len(times) <= max_frames:
         return times
-    # 首尾固定，中间均匀取
+    # Keep the first and last fixed; sample the middle uniformly
     inner_n = max_frames - 2
     if inner_n <= 0:
         return [times[0], times[-1]]
     step = (len(times) - 1) / (inner_n + 1)
     mids = [times[int(round(step * (i + 1)))] for i in range(inner_n)]
     result = [times[0]] + mids + [times[-1]]
-    # 去重保序
+    # Deduplicate while preserving order
     dedup: list[float] = []
     for x in result:
         if not dedup or abs(dedup[-1] - x) > 1e-6:

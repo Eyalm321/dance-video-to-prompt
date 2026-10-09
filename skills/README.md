@@ -1,54 +1,54 @@
-# 项目 Skills
+# Project Skills
 
-本目录存放可复用的 Agent Skill，方便随仓库一起拷贝/同步。
+This directory holds reusable Agent Skills so they can be copied/synced along with the repo.
 
 ## dance-video-to-prompt
 
-**本地短视频 → 7 段 AI 视频生成提示词**（Agent 看图，不调外部 Vision API）。
+**Local short video → 7-section AI video-generation prompt** (the Agent views the images; no external Vision API is called).
 
-覆盖：跳舞 / 姿态展示 / 变装 / 旅行打卡 / 穿搭行走等多类竖屏参考片。  
-动作清单强制包含：**左右肢、角度/幅度、手型、视线、面部表情（含时间轴变化）**。  
-看图时须分析眉/眼/口与情绪、**穿搭颜色与样式**、**拍摄场景**，写入 `analysis.json` 并落到 Prompt。
+Covers many kinds of vertical reference clips: dance / pose showcase / outfit change / travel check-in / outfit walk, etc.  
+The Action List must include: **left/right limbs, angle/amplitude, hand shape, gaze, facial expression (including changes over the timeline)**.  
+When viewing the images, analyze brows/eyes/mouth and emotion, **outfit colors and styles**, and the **shooting scene**, write them into `analysis.json`, and carry them into the Prompt.
 
-### 主副本
+### Primary copy
 
 ```text
 skills/dance-video-to-prompt/
 ```
 
-完整说明见该目录下 `SKILL.md`。
+See `SKILL.md` in that directory for full documentation.
 
-### 安装到本机各 Agent
+### Install to each local Agent
 
 ```bash
 bash skills/dance-video-to-prompt/scripts/install.sh
 ```
 
-同步到：
+Syncs to:
 
 - `.grok/skills/dance-video-to-prompt/`
 - `~/.grok/skills/dance-video-to-prompt/`
 - `~/.agents/skills/dance-video-to-prompt/`
-- `~/.claude/skills/dance-video-to-prompt/`（若存在）
+- `~/.claude/skills/dance-video-to-prompt/` (if it exists)
 
-### 使用
+### Usage
 
 ```text
 /dance-video-to-prompt /path/to/video.mp4
 ```
 
-或：
+Or:
 
 ```text
-把这个跳舞视频反推成生成提示词：/path/to/video.mp4
+Reverse-engineer this dance video into a generation prompt: /path/to/video.mp4
 ```
 
-只抽帧：
+Frame extraction only:
 
 ```bash
 bash skills/dance-video-to-prompt/scripts/run_extract.sh /path/to/video.mp4
 ```
 
-### 维护
+### Maintenance
 
-**以 `skills/dance-video-to-prompt/` 为主副本**；改完请再跑 `install.sh`。
+**`skills/dance-video-to-prompt/` is the primary copy**; after making changes, run `install.sh` again.

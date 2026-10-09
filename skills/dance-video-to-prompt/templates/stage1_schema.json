@@ -2,43 +2,43 @@
   "duration_sec": 0,
   "aspect_ratio": "9:16",
   "subject": {
-    "appearance": "脸型/五官/年龄气质等外貌摘要（不含完整身材，身材见下方字段）",
-    "body_type": "整体体型：高矮印象+胖瘦/曲线类型，如高挑纤细、娇小匀称、丰满曲线、健美紧实",
-    "body_proportions": "比例印象：头身比、腿长占比、肩宽/胯宽关系、腰线高低",
-    "body_details": "分部位：肩颈锁骨、胸廓轮廓、腰腹、臀胯、腿型、手臂线条（可见才写，勿编造）",
-    "posture_habit": "全片常见体态：挺拔/微塌腰/含胸/S曲线/慵懒前倾等",
+    "appearance": "Summary of looks: face shape/features/age and presence, etc. (excluding full body shape; body shape goes in the fields below)",
+    "body_type": "Overall body type: height impression + build/curve type, e.g. tall and slender, petite and well-proportioned, full and curvy, athletic and toned",
+    "body_proportions": "Proportion impression: head-to-body ratio, leg-length ratio, shoulder width vs. hip width, high or low waistline",
+    "body_details": "By body part: shoulders/neck/collarbones, rib cage contour, waist/abdomen, hips/glutes, leg shape, arm lines (only what is visible; do not invent)",
+    "posture_habit": "Posture seen throughout the video: upright / slight swayback / rounded shoulders / S-curve / relaxed forward lean, etc.",
     "hair": "",
     "outfit": {
-      "summary": "整体穿搭一句话，必须含颜色与款式，如白色修身短袖衬衫+黑色高腰包臀迷你裙+黑色尖头细高跟",
-      "style": "穿搭风格标签：OL职场/甜妹碎花/运动休闲/泳装/JK/街头/家居等",
-      "palette": "主色+辅色+点缀，如白+黑+银色配饰",
+      "summary": "One-sentence overall outfit that must include colors and styles, e.g. white fitted short-sleeve shirt + black high-waisted bodycon mini skirt + black pointed-toe stilettos",
+      "style": "Outfit style tag: office/OL, sweet floral, sporty casual, swimwear, JK uniform, streetwear, loungewear, etc.",
+      "palette": "Main color + secondary color + accents, e.g. white + black + silver accessories",
       "items": [
         {
-          "slot": "上装",
-          "name": "短袖翻领衬衫",
-          "color": "白色",
-          "style": "修身、领口扣好、袖口挽至小臂中段",
-          "material": "可见材质如棉质/缎面光泽；不可见写无",
-          "fit": "贴身/宽松/直筒等"
+          "slot": "Top",
+          "name": "Short-sleeve collared shirt",
+          "color": "White",
+          "style": "Fitted, collar buttoned, sleeves rolled to mid-forearm",
+          "material": "Visible material, e.g. cotton/satin sheen; if not visible, write none",
+          "fit": "Body-hugging/loose/straight, etc."
         }
       ],
-      "change": "无 / t=x.x 由A换成B"
+      "change": "none / at t=x.x changes from A to B"
     },
     "expression_gaze": ""
   },
   "scene": {
-    "setting_type": "室内/室外/车内/棚拍/混合",
-    "location": "地点类型，如楼梯间过道、卧室、城市步行街；不编造未见地标名",
-    "space": "空间结构：狭长过道/开阔广场/低矮角落等",
-    "subject_placement": "人物站位与朝向，如靠右墙、距门半步、面朝镜头",
-    "background": "背景层：颜色+材质+主要元素",
-    "ground": "地面材质与颜色",
-    "foreground": "前景遮挡或近景物件，无则写无",
-    "props": "环境陈设与可互动物件",
-    "time_weather": "时段与天气（可见才写）",
-    "ambient_light": "空间光源位置：顶灯/窗光/霓虹等；区别于 camera 布光操作",
-    "atmosphere": "空间气质：冷灰职场过道/温馨卧室/热闹街区等",
-    "changes": "单场景贯穿 / 切场时间点"
+    "setting_type": "indoor/outdoor/in-car/studio/mixed",
+    "location": "Location type, e.g. stairwell corridor, bedroom, pedestrian shopping street; do not invent landmark names that are not visible",
+    "space": "Spatial structure: long narrow corridor / open plaza / low cramped corner, etc.",
+    "subject_placement": "Subject's position and facing direction, e.g. against the right wall, half a step from the door, facing the camera",
+    "background": "Background layer: color + material + main elements",
+    "ground": "Ground material and color",
+    "foreground": "Foreground occlusion or close-range objects; write none if absent",
+    "props": "Environmental furnishings and interactive objects",
+    "time_weather": "Time of day and weather (only if visible)",
+    "ambient_light": "Position of light sources in the space: ceiling lights/window light/neon, etc.; distinct from camera-side lighting setup",
+    "atmosphere": "Character of the space: cool gray office corridor / cozy bedroom / bustling street, etc.",
+    "changes": "single continuous scene / timestamps of scene cuts"
   },
   "visual": {
     "quality_feel": "",
@@ -47,38 +47,38 @@
     "lighting": ""
   },
   "camera": {
-    "device_feel": "手机竖屏/云台/手持微晃/类电影感等设备与稳定质感",
-    "height": "机位高度：眼平/微仰/低机位/微俯/高机位",
-    "angle": "水平角度：正面/3/4侧/正侧/微过肩等",
-    "framing": "主景别+构图：全身居中/七分身三分法等",
-    "movement": "主运镜：固定/横移/推进/拉远/跟随/环绕/升降 + 速度路径",
-    "movement_rhythm": "运镜与节奏：匀速/强拍微顿/弱拍跟移/无节奏关联",
-    "depth_of_field": "景深与合焦主体：全身清晰/背景轻虚/脸部合焦等",
-    "focus_priority": "全片镜头关注重点：主焦点+次焦点（全身比例/腿脚/腰胯/手势/面部/服装/环境）",
-    "shot_method": "拍摄方法综述2~4句：怎么拍、机位与稳定、想突出什么"
+    "device_feel": "Device and stabilization feel: vertical phone video / gimbal / slight handheld shake / cinematic look, etc.",
+    "height": "Camera height: eye level / slightly low / low angle / slightly high / high angle",
+    "angle": "Horizontal angle: frontal / 3/4 side / full profile / slight over-the-shoulder, etc.",
+    "framing": "Main shot size + composition: full body centered / knee-up shot on the rule of thirds, etc.",
+    "movement": "Main camera movement: static/truck/push in/pull out/follow/orbit/crane + speed and path",
+    "movement_rhythm": "Camera movement vs. rhythm: constant speed / brief hold on strong beats / follow move on weak beats / not tied to rhythm",
+    "depth_of_field": "Depth of field and in-focus subject: full body sharp / background slightly soft / face in focus, etc.",
+    "focus_priority": "Focal emphasis for the whole video: primary focus + secondary focus (full-body proportions/legs and feet/waist and hips/hand gestures/face/clothing/environment)",
+    "shot_method": "Shooting method summary in 2-4 sentences: how it is filmed, camera position and stabilization, what it aims to highlight"
   },
   "segments": [
     {
       "start": 0.0,
       "end": 1.0,
-      "action": "肢体：左右肢/幅度/手型/视线",
-      "expression": "眉/眼/口+情绪；相对上段变化（由A转为B或保持）",
-      "body_focus": "本段突出的身材/体态焦点，如侧身细腰与腿长；无则写全身比例保持",
-      "shot_size": "本段景别：全身/七分/半身/中近景/特写等",
-      "camera_move": "本段运镜：固定/推/拉/跟/移等；无变化写同全片",
-      "shot_focus": "本段镜头关注重点：脸/手/腿脚/腰胯/全身/服装/环境",
-      "outfit_note": "同全片 / 本段变装或服装状态变化",
-      "scene_note": "同全片 / 本段场景变化",
-      "intensity": "中",
-      "beat_hint": "可选：对齐的拍点秒数或强/弱拍说明（融合阶段填写）"
+      "action": "Limbs: left/right limbs / amplitude / hand shape / gaze",
+      "expression": "Brows/eyes/mouth + emotion; change relative to the previous segment (shifts from A to B, or stays the same)",
+      "body_focus": "Body/posture focus highlighted in this segment, e.g. side profile showing a slim waist and long legs; if none, write full-body proportions maintained",
+      "shot_size": "Shot size for this segment: full body / knee-up / waist-up / medium close-up / close-up, etc.",
+      "camera_move": "Camera movement for this segment: static/push/pull/follow/truck, etc.; if unchanged, write same as whole video",
+      "shot_focus": "Focal emphasis for this segment: face/hands/legs and feet/waist and hips/full body/clothing/environment",
+      "outfit_note": "same as whole video / outfit change or clothing state change in this segment",
+      "scene_note": "same as whole video / scene change in this segment",
+      "intensity": "medium",
+      "beat_hint": "Optional: aligned beat timestamp in seconds or strong/weak beat note (filled in during the fusion stage)"
     }
   ],
   "dialogue_or_text": {
-    "speech": "无",
-    "on_screen_text": "无"
+    "speech": "none",
+    "on_screen_text": "none"
   },
   "audio_guess": {
-    "bgm_style": "画面代理可粗猜；最终以 rhythm_analysis / rhythm_plan 为准",
+    "bgm_style": "The visual agent may make a rough guess; rhythm_analysis / rhythm_plan ultimately takes precedence",
     "bpm_feel": "",
     "beat_sync": ""
   }

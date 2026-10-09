@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 视频音轨节奏分析（BPM / 拍点 / 能量）→ rhythm_analysis.json + rhythm_brief.md
+# Video audio-track rhythm analysis (BPM / beats / energy) → rhythm_analysis.json + rhythm_brief.md
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if [[ $# -lt 2 ]]; then
-  echo "用法: bash scripts/analyze_rhythm.sh <视频路径> <输出目录 OUT_DIR>"
+  echo "Usage: bash scripts/analyze_rhythm.sh <video_path> <output_dir OUT_DIR>"
   exit 1
 fi
 

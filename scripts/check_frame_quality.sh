@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 对已有 OUT_DIR 的 frames/ 重新做清晰度检测与邻帧救援
+# Re-run the sharpness check and neighbor-frame rescue on frames/ in an existing OUT_DIR
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if [[ $# -lt 2 ]]; then
-  echo "用法: bash scripts/check_frame_quality.sh <视频路径> <OUT_DIR>"
+  echo "Usage: bash scripts/check_frame_quality.sh <video_path> <OUT_DIR>"
   exit 1
 fi
 
@@ -28,7 +28,7 @@ video = Path("$1").expanduser().resolve()
 out_dir = Path("$2").expanduser().resolve()
 meta_path = out_dir / "frames_meta.json"
 if not meta_path.exists():
-    raise SystemExit(f"缺少 {meta_path}，请先抽帧")
+    raise SystemExit(f"Missing {meta_path}; run frame extraction first")
 meta = json.loads(meta_path.read_text(encoding="utf-8"))
 samples = []
 for i, f in enumerate(meta.get("frames") or []):

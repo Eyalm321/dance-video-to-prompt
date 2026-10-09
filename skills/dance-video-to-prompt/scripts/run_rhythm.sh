@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 节奏分析封装：定位 REPO_ROOT 后调用 scripts/analyze_rhythm.sh
+# Rhythm analysis wrapper: locates REPO_ROOT, then calls scripts/analyze_rhythm.sh
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"

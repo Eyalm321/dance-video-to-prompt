@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 安装本地依赖（抽帧需要 opencv + pillow；API 模式额外需要 httpx）
+# Install local dependencies (frame extraction needs opencv + pillow; API mode also needs httpx)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -7,7 +7,7 @@ cd "$ROOT"
 
 PYTHON="python3"
 if ! command -v "$PYTHON" >/dev/null 2>&1; then
-  echo "未找到 python3"
+  echo "python3 not found"
   exit 1
 fi
 
@@ -28,11 +28,11 @@ fi
 
 if [[ ! -f "$ROOT/config/settings.env" ]]; then
   cp "$ROOT/config/settings.example.env" "$ROOT/config/settings.env"
-  echo "已生成 config/settings.env（仅 API 模式需要填写 VISION_MODEL）"
+  echo "Created config/settings.env (VISION_MODEL only needs to be filled in for API mode)"
 fi
 
 chmod +x "$ROOT/scripts/"*.sh 2>/dev/null || true
 
-echo "安装完成。"
-echo "Skill/Agent 模式: bash scripts/extract_frames.sh /path/to/video.mp4"
-echo "API 模式:         bash scripts/analyze_api.sh /path/to/video.mp4"
+echo "Setup complete."
+echo "Skill/Agent mode: bash scripts/extract_frames.sh /path/to/video.mp4"
+echo "API mode:         bash scripts/analyze_api.sh /path/to/video.mp4"

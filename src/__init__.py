@@ -1,1 +1,1 @@
-"""跳舞短视频 → 结构化视频生成提示词。"""
+"""Dance short video → structured video-generation prompt."""

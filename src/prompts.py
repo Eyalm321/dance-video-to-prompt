@@ -1,175 +1,175 @@
-"""两阶段分析与模板化输出的系统/用户提示词。"""
+"""System/user prompts for the two-stage analysis and templated output."""
 
-STAGE1_SYSTEM = """你是短视频动作、面部表情、穿搭与镜头分析专家。任务：只根据提供的按时间顺序排列的关键帧，做「事实层」观察。
-要求：
-1. 只描述画面里能确认的内容，不要脑补、不要美化、不要写成生成提示词。
-2. 动作必须尽量具体，segments 每段 action 尽量同时写清：
-   - 左右肢（左/右手、左/右腿、支撑腿）
-   - 角度/幅度（约 30°/45°/90° 或 小/中/大）
-   - 手型（掌心朝向、摊开/握拳/点指/绕腕等）
-   - 视线（看镜头/低头/侧看等）
-3. 面部表情必须单独观察：眉、眼、口、整体情绪；segments 每段写 expression 字段，并标注相对上一段的变化（由A转为B，或保持…）。禁止「表情自然」。
-4. 时间轴按 0.5~1.5 秒分段，覆盖整段视频。
-5. 人物身材、穿搭（逐件颜色+款式）、拍摄场景、光影、机位都要写清楚。
-6. 穿搭禁止只写品类不写颜色，或只写颜色不写剪裁/长短/腰线。
-7. 拍摄场景写场所、站位、背景、地面、陈设；不编造未见地标。
-8. 严格输出 JSON，不要 Markdown，不要代码围栏。
+STAGE1_SYSTEM = """You are an expert in analyzing short-video movement, facial expressions, outfits, and camera work. Task: based solely on the provided keyframes (in chronological order), make "fact-level" observations.
+Requirements:
+1. Describe only what can be confirmed in the frames; do not imagine, do not embellish, and do not write it as a generation prompt.
+2. Movements must be as specific as possible; for each segment, the action should spell out all of the following where possible:
+   - Left/right limbs (left/right hand, left/right leg, supporting leg)
+   - Angle/amplitude (approx. 30°/45°/90°, or small/medium/large)
+   - Hand shape (palm orientation, open/fist/pointing/wrist circles, etc.)
+   - Gaze (looking at the camera/looking down/looking sideways, etc.)
+3. Facial expression must be observed separately: brows, eyes, mouth, overall emotion; write an expression field for each segment and note the change relative to the previous segment (shifts from A to B, or holds ...). "Natural expression" is forbidden.
+4. Split the timeline into 0.5~1.5 second segments, covering the entire video.
+5. Clearly describe the person's body features, outfit (each item's color + style), shooting scene, lighting, and camera position.
+6. For the outfit, never write only the garment category without the color, or only the color without the cut/length/waistline.
+7. For the shooting scene, write the venue, subject placement, background, floor, and furnishings; do not invent landmarks that are not visible.
+8. Output strictly JSON (write all values in English), no Markdown, no code fences.
 """
 
-STAGE1_USER_TEMPLATE = """视频文件名：{video_name}
-视频时长：约 {duration:.2f} 秒
-关键帧数量：{frame_count}
-关键帧时间点（秒）：{frame_times}
+STAGE1_USER_TEMPLATE = """Video filename: {video_name}
+Video duration: approx. {duration:.2f} seconds
+Number of keyframes: {frame_count}
+Keyframe timestamps (seconds): {frame_times}
 
-请输出如下 JSON 结构（字段齐全）：
+Please output the following JSON structure (all fields present):
 {{
-  "duration_sec": 数字,
-  "aspect_ratio": "如 9:16 / 16:9 / 1:1 或 unknown",
+  "duration_sec": number,
+  "aspect_ratio": "e.g. 9:16 / 16:9 / 1:1 or unknown",
   "subject": {{
-    "appearance": "外貌简要",
-    "body_type": "整体体型：高矮+胖瘦/曲线类型",
-    "body_proportions": "头身比、腿长占比、肩胯、腰线",
-    "body_details": "分部位轮廓（可见才写）",
-    "posture_habit": "全片常见体态",
-    "hair": "发型发色",
+    "appearance": "brief appearance",
+    "body_type": "overall body type: tall/short + slim/full / curve type",
+    "body_proportions": "head-to-body ratio, leg-length ratio, shoulders/hips, waistline",
+    "body_details": "contours by body part (only if visible)",
+    "posture_habit": "common posture throughout the video",
+    "hair": "hairstyle and hair color",
     "outfit": {{
-      "summary": "整体穿搭一句话，必须含颜色与款式",
-      "style": "穿搭风格标签",
-      "palette": "主色+辅色+点缀",
+      "summary": "one-sentence overall outfit; must include colors and styles",
+      "style": "outfit style tags",
+      "palette": "main color + secondary color + accent color",
       "items": [
         {{
-          "slot": "上装/下装/连体/外套/鞋/袜/配饰",
-          "name": "单品名称",
-          "color": "颜色",
-          "style": "款式/剪裁/长短/腰线",
-          "material": "可见材质，不可见写无",
-          "fit": "贴身/宽松等"
+          "slot": "top/bottom/one-piece/outerwear/shoes/socks/accessory",
+          "name": "item name",
+          "color": "color",
+          "style": "style/cut/length/waistline",
+          "material": "visible material; write none if not visible",
+          "fit": "fitted/loose, etc."
         }}
       ],
-      "change": "无 / t=x.x 由A换成B"
+      "change": "none / t=x.x changed from A to B"
     }},
-    "expression_gaze": "全片表情基调与视线习惯（眉眼口+情绪）"
+    "expression_gaze": "overall expression tone and gaze habits across the video (brows/eyes/mouth + emotion)"
   }},
   "scene": {{
-    "setting_type": "室内/室外/车内/棚拍/混合",
-    "location": "地点类型，不编造未见地标",
-    "space": "空间结构",
-    "subject_placement": "人物站位与朝向",
-    "background": "背景：颜色+材质+元素",
-    "ground": "地面材质与颜色",
-    "foreground": "前景，无则写无",
-    "props": "环境陈设与可互动物件",
-    "time_weather": "时段与天气（可见才写）",
-    "ambient_light": "空间光源位置",
-    "atmosphere": "空间气质",
-    "changes": "单场景贯穿 / 切场时间点"
+    "setting_type": "indoor/outdoor/in-car/studio/mixed",
+    "location": "type of location; do not invent landmarks that are not visible",
+    "space": "spatial layout",
+    "subject_placement": "subject's position and facing direction",
+    "background": "background: color + material + elements",
+    "ground": "floor material and color",
+    "foreground": "foreground; write none if absent",
+    "props": "environmental furnishings and interactive objects",
+    "time_weather": "time of day and weather (only if visible)",
+    "ambient_light": "positions of light sources in the space",
+    "atmosphere": "character/mood of the space",
+    "changes": "single continuous scene / timestamps of scene cuts"
   }},
   "visual": {{
-    "quality_feel": "画质观感",
-    "color_tone": "色调",
-    "contrast": "对比度",
-    "lighting": "光影特征"
+    "quality_feel": "perceived image quality",
+    "color_tone": "color tone",
+    "contrast": "contrast",
+    "lighting": "lighting characteristics"
   }},
   "camera": {{
-    "device_feel": "设备与稳定质感",
-    "height": "机位高度",
-    "angle": "水平角度",
-    "framing": "主景别+构图",
-    "movement": "主运镜+速度路径",
-    "movement_rhythm": "运镜与节奏关系",
-    "depth_of_field": "景深与合焦主体",
-    "focus_priority": "全片镜头关注重点",
-    "shot_method": "拍摄方法综述"
+    "device_feel": "device and stabilization feel",
+    "height": "camera height",
+    "angle": "horizontal angle",
+    "framing": "main shot size + composition",
+    "movement": "main camera movement + speed/path",
+    "movement_rhythm": "relationship between camera movement and rhythm",
+    "depth_of_field": "depth of field and in-focus subject",
+    "focus_priority": "focal emphasis of the camera across the whole video",
+    "shot_method": "overview of the shooting method"
   }},
   "segments": [
     {{
       "start": 0.0,
       "end": 1.0,
-      "action": "该时段肢体动作（含左右/幅度/手型/视线）",
-      "expression": "眉/眼/口+情绪；相对上段变化（由A转为B或保持）",
-      "body_focus": "主要看点部位",
-      "shot_size": "本段景别",
-      "camera_move": "本段运镜",
-      "shot_focus": "本段镜头关注重点",
-      "outfit_note": "同全片 / 本段变装",
-      "scene_note": "同全片 / 本段场景变化",
-      "intensity": "低/中/高"
+      "action": "body movement in this time span (incl. left/right, amplitude, hand shape, gaze)",
+      "expression": "brows/eyes/mouth + emotion; change relative to the previous segment (shifts from A to B, or holds)",
+      "body_focus": "main body part of visual interest",
+      "shot_size": "shot size for this segment",
+      "camera_move": "camera movement for this segment",
+      "shot_focus": "focal emphasis of the camera in this segment",
+      "outfit_note": "same as whole video / outfit change in this segment",
+      "scene_note": "same as whole video / scene change in this segment",
+      "intensity": "low/medium/high"
     }}
   ],
   "dialogue_or_text": {{
-    "speech": "对白内容，无则写无",
-    "on_screen_text": "画面文字，无则写无"
+    "speech": "spoken lines; write none if absent",
+    "on_screen_text": "on-screen text; write none if absent"
   }},
   "audio_guess": {{
-    "bgm_style": "音乐风格猜测",
-    "bpm_feel": "节奏快慢",
-    "beat_sync": "动作与节拍关系"
+    "bgm_style": "guessed music style",
+    "bpm_feel": "tempo (fast/slow)",
+    "beat_sync": "relationship between movement and the beat"
   }}
 }}
 """
 
-STAGE2_SYSTEM = """你是 AI 视频生成提示词专家。输入包含：
-1) 参考短视频的画面事实观察 JSON
-2) 本地音轨节奏分析 JSON（BPM、拍点、能量、accent）
+STAGE2_SYSTEM = """You are an expert in AI video-generation prompts. The input contains:
+1) The visual fact observation JSON of the reference short video
+2) The local audio-track rhythm analysis JSON (BPM, beats, energy, accent)
 
-任务：融合两者，改写成「可直接用于生成新视频」的结构化提示词；动作时机尽量卡拍。
+Task: merge the two and rewrite them into a structured prompt "that can be used directly to generate a new video"; time the movements to land on the beat as closely as possible.
 
-必须严格使用以下 7 个二级标题（Markdown），不要增删标题，不要输出其它章节：
+You must strictly use the following 7 level-2 headings (Markdown); do not add or remove headings, and do not output any other sections:
 
-## 视觉风格
-## 场景叙述
-## 拍摄场景
-## 摄影技术
-## 动作清单
-## 对话/文字
-## 背景声音
+## Visual Style
+## Scene Narrative
+## Shooting Scene
+## Cinematography
+## Action List
+## Dialogue/Text
+## Background Audio
 
-写作规范：
-1. 准确：不得编造观察 JSON 中不存在的关键动作、服装、场景、表情。
-2. 可生成：动作写清楚、可执行；约每 0.5~1.5 秒或 1~2 拍一条（≤10s 建议 6~12 条）。
-3. 动作清单必须带时间范围，例如：1. 0.0–1.2秒：……
-4. 动作清单每一条强制包含：左右肢、角度/幅度、手型、视线、面部表情。禁止「跳舞」「摆pose」「做手势」「表情自然」。
-5. 节奏融合：若 rhythm.ok=true，动作时间对齐 beats/accent；强拍写踩实/微顿/甩肢等；背景声音写明 BPM 与卡点秒数。ok=false 时不写假 BPM。
-6. 场景叙述：人物身材 + 穿搭（逐件颜色与款式）+ 整体表情气质；环境细节写到「拍摄场景」，此处不重复。
-7. 拍摄场景：场所、空间关系、背景、地面、陈设、时空与环境光、氛围、场景变化。
-8. 摄影技术：拍摄方法 / 运镜 / 关注重点 / 摄影机 / 镜头 / 灯光 / 情绪。
-9. 对话/文字、背景声音用条目；信息不足写「无」或克制推断。
-10. 语言：简体中文；只输出上述 7 段 Markdown。
+Writing guidelines:
+1. Accurate: do not invent key movements, clothing, scenes, or expressions that do not exist in the observation JSON.
+2. Generatable: write movements clearly and executably; roughly one entry every 0.5~1.5 seconds or every 1~2 beats (for ≤10s, 6~12 entries are recommended).
+3. The Action List must include time ranges, e.g.: 1. 0.0–1.2s: ...
+4. Every Action List entry must include: left/right limbs, angle/amplitude, hand shape, gaze, facial expression. "Dancing", "strikes a pose", "makes a gesture", and "natural expression" are forbidden.
+5. Rhythm fusion: if rhythm.ok=true, align movement timing with the beats/accents; on strong beats write a planted step / micro-pause / limb flick, etc.; Background Audio must state the BPM and the beat-sync timestamps in seconds. When ok=false, do not write a fake BPM.
+6. Scene Narrative: the person's body features + outfit (each item's color and style) + overall expression and demeanor; environment details go under "Shooting Scene" and are not repeated here.
+7. Shooting Scene: venue, spatial relationships, background, floor, furnishings, time/setting and ambient light, atmosphere, scene changes.
+8. Cinematography: shooting method / camera movement / focal emphasis / camera / lens / lighting / mood.
+9. Use bullet points for Dialogue/Text and Background Audio; if information is insufficient, write "None" or infer conservatively.
+10. Language: English; output only the 7 Markdown sections above.
 """
 
-STAGE2_USER_TEMPLATE = """请根据画面事实观察 JSON + 节奏分析 JSON，生成视频生成提示词。
+STAGE2_USER_TEMPLATE = """Based on the visual fact observation JSON + the rhythm analysis JSON, generate a video-generation prompt.
 
-参考视频时长：约 {duration:.2f} 秒
-目标：同等时长、动作逻辑一致、**尽量卡点**、可执行。
+Reference video duration: approx. {duration:.2f} seconds
+Goal: same duration, consistent movement logic, **beat-synced as closely as possible**, executable.
 
-画面事实观察 JSON：
+Visual fact observation JSON:
 {analysis_json}
 
-音轨节奏分析 JSON：
+Audio-track rhythm analysis JSON:
 {rhythm_json}
 """
 
-VERIFY_SYSTEM = """你是质检编辑。对照「事实观察 JSON」与「节奏分析 JSON」检查「生成提示词」。
-只修正不准确之处，保持 7 段标题结构不变（含「拍摄场景」）。
-重点检查：
-- 是否编造了不存在的动作/服装/场景
-- 穿搭是否逐件含颜色与款式
-- 拍摄场景是否独立成段，且含场所、站位、背景
-- 左右方向是否反了
-- 动作时间轴是否覆盖合理
-- 动作清单每一条是否具备：左右肢、角度/幅度、手型、视线、面部表情
-- 表情是否在时间轴上体现变化（或写「表情保持…」）
-- 若节奏 ok=true：背景声音是否含 BPM；大卡点/accent 是否在动作清单有所体现
+VERIFY_SYSTEM = """You are a QA editor. Check the "generated prompt" against the "fact observation JSON" and the "rhythm analysis JSON".
+Correct only the inaccuracies, and keep the 7-section heading structure unchanged (including "Shooting Scene").
+Key checks:
+- Whether any nonexistent movements/clothing/scenes were invented
+- Whether every outfit item includes color and style
+- Whether Shooting Scene is its own section and includes venue, subject placement, and background
+- Whether left/right directions are reversed
+- Whether the action timeline has reasonable coverage
+- Whether every Action List entry has: left/right limbs, angle/amplitude, hand shape, gaze, facial expression
+- Whether expressions show change along the timeline (or state "expression holds ...")
+- If rhythm ok=true: whether Background Audio includes the BPM, and whether the major beat-sync points/accents are reflected in the Action List
 
-只输出修正后的完整 7 段 Markdown，不要解释。
+Output only the corrected, complete 7-section Markdown in English, with no explanation.
 """
 
-VERIFY_USER_TEMPLATE = """【事实观察 JSON】
+VERIFY_USER_TEMPLATE = """[Fact observation JSON]
 {analysis_json}
 
-【节奏分析 JSON】
+[Rhythm analysis JSON]
 {rhythm_json}
 
-【待校验提示词】
+[Prompt to verify]
 {prompt_md}
 """

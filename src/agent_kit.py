@@ -1,4 +1,4 @@
-"""Agent 模式工作包 AGENT_INSTRUCTIONS 生成。"""
+"""Generates the Agent-mode work packet AGENT_INSTRUCTIONS."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,7 +14,7 @@ def write_agent_kit(
     rhythm: dict | None = None,
     quality: dict | None = None,
 ) -> None:
-    """为 Skill/Agent 模式写入工作包（不调用模型）。"""
+    """Write the work packet for Skill/Agent mode (does not call the model)."""
     quality = quality or {}
     q_frames = {f.get("path"): f for f in (quality.get("frames") or []) if f.get("path")}
     frame_lines = []
@@ -35,11 +35,11 @@ def write_agent_kit(
             for b in blurry
         )
         if blurry
-        else "- （无）"
+        else "- (none)"
     )
     q_stats = quality.get("stats") or {}
     quality_line = (
-        f"- 清晰度：sharp={q_stats.get('sharp')} rescued={q_stats.get('rescued')} "
+        f"- Sharpness: sharp={q_stats.get('sharp')} rescued={q_stats.get('rescued')} "
         f"blurry={q_stats.get('blurry')} thr={quality.get('threshold')} "
         f"→ `{out_dir / 'frame_quality.json'}` / `{out_dir / 'frame_quality_brief.md'}`"
     )
@@ -62,137 +62,137 @@ def write_agent_kit(
     rhythm_ok = bool(rhythm.get("ok"))
     bpm = rhythm.get("bpm")
     rhythm_line = (
-        f"- 节奏分析：成功 BPM≈{bpm} → `{out_dir / 'rhythm_analysis.json'}` / "
+        f"- Rhythm analysis: succeeded, BPM≈{bpm} → `{out_dir / 'rhythm_analysis.json'}` / "
         f"`{out_dir / 'rhythm_brief.md'}`"
         if rhythm_ok
-        else f"- 节奏分析：失败或无音轨（{rhythm.get('error')}）→ 仍读 "
-        f"`{out_dir / 'rhythm_analysis.json'}`，融合时不强行假 BPM"
+        else f"- Rhythm analysis: failed or no audio track ({rhythm.get('error')}) → still read "
+        f"`{out_dir / 'rhythm_analysis.json'}`; do not force a fake BPM during fusion"
     )
 
-    instructions = f"""# Agent 工作包（不调用外部视觉 API）
+    instructions = f"""# Agent Work Packet (no external vision API calls)
 
-请使用 **当前 CLI Agent 的多模态看图能力**（read_file 读取图片）完成**画面分析**；  
-节奏数值已由本地脚本写好，须由 **节奏子代理** 解释，再由主代理 **融合** 写 Prompt。  
-不要再调用 HTTP/Vision API。
+Use **the current CLI Agent's multimodal image-viewing capability** (read_file to read images) to complete the **visual analysis**;  
+the rhythm values have already been written by a local script and must be interpreted by the **rhythm sub-agent**, after which the main agent **fuses** everything to write the Prompt.  
+Do not call any HTTP/Vision API again.
 
-## 输入
+## Inputs
 
-- 视频：`{video_path}`
-- 时长：约 {duration:.2f} 秒
-- 抽帧间隔：{interval:.3f}s
-- 帧数：{len(samples)}
-- 输出目录：`{out_dir}`
+- Video: `{video_path}`
+- Duration: approx. {duration:.2f} seconds
+- Frame extraction interval: {interval:.3f}s
+- Frame count: {len(samples)}
+- Output directory: `{out_dir}`
 {quality_line}
 {rhythm_line}
 
-## 关键帧清晰度（看图前必读）
+## Keyframe sharpness (must read before viewing images)
 
-脚本已用 Laplacian 方差检测模糊，并对模糊帧做**邻帧救援**（替换文件）。
+The script has already detected blur via Laplacian variance and performed **neighbor-frame rescue** on blurry frames (replacing the files).
 
-### 优先分析列表 `sharp_for_analysis`（必须优先 read_file 这些）
+### Priority analysis list `sharp_for_analysis` (you must read_file these first)
 
 {sharp_lines}
 
-### 仍模糊帧（不要细抠手指/五官；可写运动模糊）
+### Still-blurry frames (do not scrutinize fingers/facial features; motion blur may be noted)
 
 {blur_lines}
 
-**规则：**
-1. **先读** `frame_quality.json` / `frame_quality_brief.md`
-2. **优先**只对 `sharp_for_analysis` 做精细肢体与表情描述
-3. 模糊帧：只记时间轴占位与大致姿态，**禁止编造**清晰手型/眉眼细节
-4. 若仍模糊帧过多（>25%）：动作写趋势与幅度，细节标注「运动模糊不可确认」；可建议用户 `--interval 0.25` 重抽
+**Rules:**
+1. **First read** `frame_quality.json` / `frame_quality_brief.md`
+2. **Prioritize**: give fine-grained limb and expression descriptions only for `sharp_for_analysis`
+3. Blurry frames: record only timeline placeholders and the rough pose; **do not invent** sharp hand-shape/brow/eye details
+4. If too many frames are still blurry (>25%): describe movement trends and amplitude, and mark details as "motion blur, cannot confirm"; you may suggest the user re-extract with `--interval 0.25`
 
-## 全部关键帧列表（含清晰度标签）
+## All keyframes (with sharpness tags)
 
 {frame_lines_text}
 
-## 强制多阶段流程（清晰度 → 画面 ∥ 节奏 → 融合）
+## Mandatory multi-stage workflow (sharpness → visuals ∥ rhythm → fusion)
 
-### 阶段 0：确认清晰度（已由脚本完成，Agent 须遵守结果）
+### Stage 0: Confirm sharpness (already done by the script; the Agent must respect the results)
 
-- 报告：`{out_dir / "frame_quality.json"}`
-- 不得忽略 blurry 标签硬编细节
+- Report: `{out_dir / "frame_quality.json"}`
+- Do not ignore the blurry tags and force-invent details
 
-### 阶段 A：画面代理 — 事实观察（只描述，不创作）
+### Stage A: Visual agent — fact observation (describe only, do not create)
 
-1. **优先**按 `sharp_for_analysis` 用 read_file 阅读；帧多则首尾+均匀覆盖清晰帧。
-2. 只写画面能确认的内容，禁止编造；模糊帧不编造细节。
-3. 写入：`{out_dir / "analysis.json"}`
-4. JSON 对齐 schema：
+1. **Prioritize** reading with read_file per `sharp_for_analysis`; if there are many frames, cover the first and last plus evenly spaced sharp frames.
+2. Write only what can be confirmed in the frames; no invention; do not invent details for blurry frames.
+3. Write to: `{out_dir / "analysis.json"}`
+4. The JSON must conform to the schema:
 
 ```json
 {schema_text}
 ```
 
-要求：
-- segments 按 0.5~1.5 秒切分，覆盖全片
-- 每段 action：左右肢、角度/幅度、手型、视线
-- 每段 expression：眉/眼/口/情绪 + 相对上段变化；禁止「表情自然」
-- 穿搭：`subject.outfit` 逐件填写颜色与款式（剪裁/长短/腰线）
-- 拍摄场景：`scene` 填写场所、站位、背景、地面、陈设、时空
-- 对话/字幕无则写「无」
-- audio_guess 可粗写；**最终 BPM 以节奏文件为准，禁止画面代理编造精确拍点表**
+Requirements:
+- Split segments into 0.5~1.5 second spans covering the whole video
+- Each segment's action: left/right limbs, angle/amplitude, hand shape, gaze
+- Each segment's expression: brows/eyes/mouth/emotion + change relative to the previous segment; "natural expression" is forbidden
+- Outfit: fill in `subject.outfit` item by item with color and style (cut/length/waistline)
+- Shooting scene: fill in `scene` with venue, subject placement, background, floor, furnishings, time/setting
+- Dialogue/subtitles: write "none" if absent
+- audio_guess can be rough; **the final BPM comes from the rhythm file; the visual agent must not invent a precise beat table**
 
-### 阶段 B：节奏子代理 — 卡点规划（可与 A 并行）
+### Stage B: Rhythm sub-agent — beat-sync planning (can run in parallel with A)
 
-1. 只读：`{out_dir / "rhythm_analysis.json"}`、`{out_dir / "rhythm_brief.md"}`
-2. 角色说明见 skill：`skills/dance-video-to-prompt/agents/rhythm_agent.md`
-3. **不要**用看帧代替节奏数字；**不要**直接写 prompt.md
-4. 写入：`{out_dir / "rhythm_plan.json"}`（结构见 templates/rhythm_plan_schema.json）
+1. Read only: `{out_dir / "rhythm_analysis.json"}`, `{out_dir / "rhythm_brief.md"}`
+2. Role description in the skill: `skills/dance-video-to-prompt/agents/rhythm_agent.md`
+3. **Do not** substitute frame viewing for the rhythm numbers; **do not** write prompt.md directly
+4. Write to: `{out_dir / "rhythm_plan.json"}` (structure in templates/rhythm_plan_schema.json)
 
-可用 spawn_subagent 独立完成阶段 B；无 spawn 则主会话切换角色完成。
+You can use spawn_subagent to complete Stage B independently; without spawn, the main session switches roles to complete it.
 
-### 阶段 C：融合 — 7 段生成提示词（主代理）
+### Stage C: Fusion — 7-section generation prompt (main agent)
 
-**同时基于** `analysis.json` + `rhythm_plan.json`（及 rhythm_analysis 拍点表）写出 Prompt。
+Write the Prompt **based on both** `analysis.json` + `rhythm_plan.json` (and the rhythm_analysis beat table).
 
-必须严格 7 个二级标题（不要增删）：
+You must strictly use the 7 level-2 headings (do not add or remove any):
 
-## 视觉风格
-## 场景叙述
-## 拍摄场景
-## 摄影技术
-## 动作清单
-## 对话/文字
-## 背景声音
+## Visual Style
+## Scene Narrative
+## Shooting Scene
+## Cinematography
+## Action List
+## Dialogue/Text
+## Background Audio
 
-写作规范：
-- 准确：不编造 analysis 中没有的关键动作/服装/场景/表情
-- 场景叙述：人物身材 + 穿搭（逐件颜色与款式）；不写环境细节
-- 拍摄场景：场所、空间关系、背景、地面、陈设、时空与环境光、氛围、场景变化
-- 动作五要素：左右肢、角度/幅度、手型、视线、面部表情；禁止空泛词
-- **若节奏 ok**：动作时间对齐拍点/accent；强拍写踩实/微顿/甩肢等；背景声音写清 BPM 与卡点秒数
-- **若节奏失败**：不强行假 BPM，动作跟画面时间轴
-- 摄影技术：拍摄方法 / 运镜 / 关注重点 / 摄影机 / 镜头 / 灯光 / 情绪
-- 简体中文
+Writing guidelines:
+- Accurate: do not invent key movements/clothing/scenes/expressions that are not in analysis
+- Scene Narrative: the person's body features + outfit (each item's color and style); no environment details
+- Shooting Scene: venue, spatial relationships, background, floor, furnishings, time/setting and ambient light, atmosphere, scene changes
+- Five action elements: left/right limbs, angle/amplitude, hand shape, gaze, facial expression; no vague words
+- **If rhythm is ok**: align movement timing with the beats/accents; on strong beats write a planted step/micro-pause/limb flick, etc.; Background Audio must state the BPM and the beat-sync timestamps in seconds
+- **If rhythm analysis failed**: do not force a fake BPM; movements follow the visual timeline
+- Cinematography: shooting method / camera movement / focal emphasis / camera / lens / lighting / mood
+- English
 
-模板参考：
+Template reference:
 
 ```markdown
 {template_text}
 ```
 
-写入：`{out_dir / "prompt.md"}`
+Write to: `{out_dir / "prompt.md"}`
 
-### 阶段 D：校验
+### Stage D: Verification
 
-- 画面：无编造、左右正确、五要素齐全、表情有变化或写保持
-- 穿搭：场景叙述逐件含颜色与款式；`subject.outfit.items` 已填
-- 拍摄场景：独立成段；场所 + 背景 ≥2 元素 + 人物站位
-- 清晰度：未对 blurry 帧编造精细手型/五官
-- 节奏：ok 时 BPM 与大卡点是否进入动作清单与背景声音
-- 覆盖写回 `prompt.md`
+- Visuals: no invention, left/right correct, all five elements present, expressions change or are stated as holding
+- Outfit: Scene Narrative includes color and style for each item; `subject.outfit.items` is filled in
+- Shooting Scene: its own section; venue + background with ≥2 elements + subject placement
+- Sharpness: no fine-grained hand shape/facial features invented for blurry frames
+- Rhythm: when ok, whether the BPM and major beat-sync points made it into the Action List and Background Audio
+- Overwrite `prompt.md` with the result
 
-## 完成标准
+## Completion criteria
 
-- [ ] 已读 frame_quality.json，优先分析 sharp_for_analysis
-- [ ] analysis.json 合法（含 segments[].expression、subject.outfit、scene 场所字段）
-- [ ] rhythm_plan.json 已写（节奏失败时也要有保守 plan）
-- [ ] prompt.md 含完整 7 段标题（含拍摄场景）
-- [ ] 穿搭逐件含颜色与款式；拍摄场景未与场景叙述重复堆砌
-- [ ] 动作清单五要素齐全；有节奏则体现卡点
-- [ ] 向用户打印 prompt.md，并给出 analysis / frame_quality / rhythm_* / frames 路径
+- [ ] Read frame_quality.json and prioritized analyzing sharp_for_analysis
+- [ ] analysis.json is valid (includes segments[].expression, subject.outfit, and the scene venue fields)
+- [ ] rhythm_plan.json is written (a conservative plan is required even if rhythm analysis failed)
+- [ ] prompt.md contains all 7 section headings (including Shooting Scene)
+- [ ] Each outfit item includes color and style; Shooting Scene is not redundantly piled onto Scene Narrative
+- [ ] All five elements present in the Action List; beat-sync reflected when rhythm is available
+- [ ] Print prompt.md to the user, and give the analysis / frame_quality / rhythm_* / frames paths
 """
     (out_dir / "AGENT_INSTRUCTIONS.md").write_text(instructions, encoding="utf-8")
 

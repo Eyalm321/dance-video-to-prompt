@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""CLI：本地短视频 → 7 段结构化视频生成提示词。
+"""CLI: local short video → 7-section structured video-generation prompt.
 
-支持两种模式：
-- agent：只抽帧并写出 Agent 工作说明（不调 API，给 Skill/CLI 模型看图用）
-- api：抽帧 + 视觉 API 三阶段分析
+Supports two modes:
+- agent: frame extraction only, plus Agent work instructions (no API calls; for the Skill/CLI model to view the images)
+- api: frame extraction + three-stage vision API analysis
 """
 
 from __future__ import annotations
@@ -55,49 +55,49 @@ from agent_kit import write_agent_kit  # noqa: E402
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="将 ≤10s 本地跳舞视频反推为 7 段视频生成提示词"
+        description="Reverse-engineer a local dance video (≤10s) into a 7-section video-generation prompt"
     )
-    p.add_argument("video", type=Path, help="本地视频路径")
+    p.add_argument("video", type=Path, help="Path to the local video")
     p.add_argument(
         "--mode",
         choices=("agent", "api"),
         default="agent",
-        help="agent=只抽帧+工作包(默认，给 Skill/CLI 模型)；api=调用视觉 API",
+        help="agent=frame extraction + work kit only (default, for the Skill/CLI model); api=call the vision API",
     )
     p.add_argument(
         "-o",
         "--output-dir",
         type=Path,
         default=None,
-        help="输出目录，默认 output/<视频名>_<时间戳>",
+        help="Output directory, default output/<video name>_<timestamp>",
     )
     p.add_argument(
         "--interval",
         type=float,
         default=None,
-        help="抽帧间隔秒，默认 FRAME_INTERVAL 或 0.33",
+        help="Frame extraction interval in seconds, default FRAME_INTERVAL or 0.33",
     )
     p.add_argument(
         "--max-frames",
         type=int,
         default=None,
-        help="最多帧数，默认 MAX_FRAMES 或 36",
+        help="Maximum number of frames, default MAX_FRAMES or 36",
     )
     p.add_argument(
         "--model",
         type=str,
         default=None,
-        help="[api] 视觉模型名",
+        help="[api] Vision model name",
     )
     p.add_argument(
         "--no-verify",
         action="store_true",
-        help="[api] 跳过第三轮校验",
+        help="[api] Skip the third-round verification",
     )
     p.add_argument(
         "--frames-only",
         action="store_true",
-        help="兼容旧参数：等价于 --mode agent，且不写详细说明时可忽略",
+        help="Legacy compatibility flag: equivalent to --mode agent; can be ignored when detailed instructions are not needed",
     )
     return p
 
@@ -113,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
 
     video_path: Path = args.video.expanduser().resolve()
     if not video_path.exists():
-        logger.error("视频不存在: %s", video_path)
+        logger.error("Video does not exist: %s", video_path)
         return 1
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -128,10 +128,10 @@ def main(argv: list[str] | None = None) -> int:
     interval = args.interval or float(os.getenv("FRAME_INTERVAL", "0.33"))
     max_frames = args.max_frames or int(os.getenv("MAX_FRAMES", "36"))
 
-    logger.info("模式: %s", mode)
-    logger.info("视频: %s", video_path)
-    logger.info("输出: %s", out_dir)
-    logger.info("抽帧间隔=%.3fs max_frames=%d", interval, max_frames)
+    logger.info("Mode: %s", mode)
+    logger.info("Video: %s", video_path)
+    logger.info("Output: %s", out_dir)
+    logger.info("Frame extraction interval=%.3fs max_frames=%d", interval, max_frames)
 
     samples, duration = extract_frames(
         video_path=video_path,
@@ -140,8 +140,8 @@ def main(argv: list[str] | None = None) -> int:
         max_frames=max_frames,
     )
 
-    # 看图前：清晰度检测 + 邻帧救援
-    logger.info("开始关键帧清晰度检测…")
+    # Before viewing images: sharpness check + neighbor-frame rescue
+    logger.info("Starting keyframe sharpness check...")
     quality = check_and_rescue_frames(
         video_path=video_path,
         samples=samples,
@@ -150,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     q_by_path = {f["path"]: f for f in (quality.get("frames") or [])}
     logger.info(
-        "清晰度完成: sharp=%s rescued=%s blurry=%s ok=%s",
+        "Sharpness check done: sharp=%s rescued=%s blurry=%s ok=%s",
         (quality.get("stats") or {}).get("sharp"),
         (quality.get("stats") or {}).get("rescued"),
         (quality.get("stats") or {}).get("blurry"),
@@ -181,11 +181,11 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    # 抽帧后统一做节奏分析（agent / api 均落盘，供融合使用）
-    logger.info("开始节奏分析…")
+    # After frame extraction, always run rhythm analysis (written to disk in both agent and api modes, for fusion)
+    logger.info("Starting rhythm analysis...")
     rhythm = analyze_video_rhythm(video_path=video_path, out_dir=out_dir, keep_wav=True)
     logger.info(
-        "节奏分析完成: ok=%s bpm=%s",
+        "Rhythm analysis done: ok=%s bpm=%s",
         rhythm.get("ok"),
         rhythm.get("bpm"),
     )
@@ -200,8 +200,8 @@ def main(argv: list[str] | None = None) -> int:
             rhythm=rhythm,
             quality=quality,
         )
-        logger.info("Agent 模式：抽帧+清晰度+节奏完成，共 %d 帧", len(samples))
-        logger.info("工作说明: %s", out_dir / "AGENT_INSTRUCTIONS.md")
+        logger.info("Agent mode: frame extraction + sharpness + rhythm done, %d frames total", len(samples))
+        logger.info("Work instructions: %s", out_dir / "AGENT_INSTRUCTIONS.md")
         print(str(out_dir))
         print(f"FRAME_COUNT={len(samples)}")
         print(f"DURATION_SEC={duration:.3f}")
@@ -216,7 +216,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"INSTRUCTIONS={out_dir / 'AGENT_INSTRUCTIONS.md'}")
         return 0
 
-    # API 模式：优先把清晰帧送给视觉模型
+    # API mode: prefer sending sharp frames to the vision model
     from analyze import analyze_video_to_prompt  # noqa: WPS433
     from llm_client import VisionLLMClient  # noqa: WPS433
 
@@ -260,14 +260,14 @@ def main(argv: list[str] | None = None) -> int:
         encoding="utf-8",
     )
 
-    logger.info("提示词已写入: %s", prompt_path)
+    logger.info("Prompt written to: %s", prompt_path)
     if result["issues"]:
-        logger.warning("结构问题: %s", "; ".join(result["issues"]))
+        logger.warning("Structure issues: %s", "; ".join(result["issues"]))
 
-    print("\n========== 视频生成提示词 ==========\n")
+    print("\n========== Video Generation Prompt ==========\n")
     print(result["prompt_md"])
     print("====================================")
-    print(f"\n已保存: {prompt_path}")
+    print(f"\nSaved: {prompt_path}")
     return 0
 
 

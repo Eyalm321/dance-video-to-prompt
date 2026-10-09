@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""抽帧清晰度检测：Laplacian 方差 + 邻帧救援替换模糊帧。"""
+"""Sharpness check for extracted frames: Laplacian variance + neighbor-frame rescue to replace blurry frames."""
 
 from __future__ import annotations
 
@@ -16,13 +16,13 @@ from extract_frames import FrameSample
 
 logger = logging.getLogger("frame_quality")
 
-# 绝对下限：低于此值几乎一定糊（与分辨率有关，救援后再判）
+# Absolute floor: below this a frame is almost certainly blurry (resolution-dependent; re-judged after rescue)
 ABS_MIN_SHARP = 35.0
-# 相对中位数比例：score < median * REL_FACTOR 视为模糊
+# Ratio relative to the median: score < median * REL_FACTOR counts as blurry
 REL_FACTOR = 0.40
-# 救援搜索偏移（秒）
+# Rescue search offsets (seconds)
 RESCUE_OFFSETS = (-0.10, -0.06, -0.03, 0.03, 0.06, 0.10, 0.15, -0.15)
-# 救援成功需至少比原帧好这么多倍
+# A rescue only succeeds if the new frame is at least this many times better than the original
 RESCUE_IMPROVE = 1.25
 
 
@@ -67,7 +67,7 @@ def _adaptive_threshold(scores: list[float]) -> float:
         return ABS_MIN_SHARP
     arr = sorted(scores)
     mid = arr[len(arr) // 2]
-    # 中位数偏低时用绝对门槛兜底
+    # Fall back to the absolute floor when the median is low
     return max(ABS_MIN_SHARP, mid * REL_FACTOR)
 
 
@@ -78,14 +78,14 @@ def check_and_rescue_frames(
     duration: float,
 ) -> dict[str, Any]:
     """
-    检测每帧清晰度；模糊则在邻域重抽最清晰一帧覆盖原文件。
-    写入 frame_quality.json，返回报告 dict。
+    Check each frame's sharpness; if blurry, re-grab the sharpest frame from its neighborhood and overwrite the original file.
+    Write frame_quality.json and return the report dict.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     if not samples:
         report = {
             "ok": False,
-            "error": "无帧可检",
+            "error": "No frames to check",
             "frames": [],
             "sharp_for_analysis": [],
             "blurry_remaining": [],
@@ -94,7 +94,7 @@ def check_and_rescue_frames(
         _write_report(output_dir, report)
         return report
 
-    # 初筛分数
+    # Initial screening scores
     raw_scores = [laplacian_score_path(s.path) for s in samples]
     threshold = _adaptive_threshold(raw_scores)
 
@@ -102,12 +102,12 @@ def check_and_rescue_frames(
     if not cap.isOpened():
         report = {
             "ok": False,
-            "error": f"无法打开视频做救援: {video_path}",
+            "error": f"Could not open video for rescue: {video_path}",
             "threshold": threshold,
             "frames": [],
             "sharp_for_analysis": [str(s.path) for s in samples],
             "blurry_remaining": [],
-            "stats": {"total": len(samples), "note": "跳过救援"},
+            "stats": {"total": len(samples), "note": "rescue skipped"},
         }
         _write_report(output_dir, report)
         return report
@@ -129,7 +129,7 @@ def check_and_rescue_frames(
             )
             continue
 
-        # 邻帧救援
+        # Neighbor-frame rescue
         best_score = score0
         best_frame = None
         best_off = 0.0
@@ -149,7 +149,7 @@ def check_and_rescue_frames(
         if best_frame is not None and best_score >= score0 * RESCUE_IMPROVE and best_score >= threshold * 0.85:
             rgb = cv2.cvtColor(best_frame, cv2.COLOR_BGR2RGB)
             Image.fromarray(rgb).save(s.path, quality=92, optimize=True)
-            # 更新 sample 时间标注：文件名可保留原时刻，报告记真实偏移
+            # Update the sample time label: the filename may keep the original timestamp; the report records the actual offset
             results.append(
                 FrameQuality(
                     index=s.index,
@@ -162,7 +162,7 @@ def check_and_rescue_frames(
                 )
             )
             logger.info(
-                "模糊帧已救援 t=%.2fs score %.1f→%.1f offset=%+.3fs",
+                "Blurry frame rescued t=%.2fs score %.1f→%.1f offset=%+.3fs",
                 s.time_sec,
                 score0,
                 best_score,
@@ -179,13 +179,13 @@ def check_and_rescue_frames(
                     score_before=round(score0, 2),
                 )
             )
-            logger.warning("帧仍模糊 t=%.2fs score=%.1f thr=%.1f", s.time_sec, score0, threshold)
+            logger.warning("Frame still blurry t=%.2fs score=%.1f thr=%.1f", s.time_sec, score0, threshold)
 
     cap.release()
 
     sharp_paths = [r.path for r in results if r.status in ("sharp", "rescued")]
     blurry = [r for r in results if r.status == "blurry"]
-    # 若清晰帧过少：把相对最清晰的补进分析列表（并标注仍糊）
+    # If there are too few sharp frames: add the relatively sharpest ones to the analysis list (still marked blurry)
     min_need = max(4, len(samples) // 3)
     if len(sharp_paths) < min_need:
         ranked = sorted(results, key=lambda x: x.score, reverse=True)
@@ -220,14 +220,14 @@ def check_and_rescue_frames(
         },
         "agent_rules": {
             "prefer_paths": "sharp_for_analysis",
-            "blurry_use": "仅作时间占位，不据此写细手指/五官；可写「运动模糊/动作过渡」",
-            "if_many_blurry": "动作条写幅度与趋势，细节降置信；可建议用户 --interval 0.25 重抽",
+            "blurry_use": "Use only as a time placeholder; do not write fine finger/facial-feature details from it; may write \"motion blur / movement transition\"",
+            "if_many_blurry": "Action entries describe amplitude and trend, with lower confidence on details; may suggest the user re-extract with --interval 0.25",
         },
     }
     _write_report(output_dir, report)
     _write_brief(output_dir, report)
     logger.info(
-        "清晰度: total=%d sharp=%d rescued=%d blurry=%d thr=%.1f ok=%s",
+        "Sharpness: total=%d sharp=%d rescued=%d blurry=%d thr=%.1f ok=%s",
         len(results),
         n_sharp,
         n_rescued,
@@ -247,28 +247,28 @@ def _write_report(out_dir: Path, report: dict[str, Any]) -> None:
 def _write_brief(out_dir: Path, report: dict[str, Any]) -> None:
     st = report.get("stats") or {}
     lines = [
-        "# 关键帧清晰度简报",
+        "# Keyframe Sharpness Brief",
         "",
-        f"- 方法：Laplacian 方差",
-        f"- 阈值：{report.get('threshold')}",
-        f"- 统计：共 {st.get('total')} 帧 | 清晰 {st.get('sharp')} | 救援 {st.get('rescued')} | 仍模糊 {st.get('blurry')}",
-        f"- 供分析优先帧数：{st.get('sharp_for_analysis_count')}",
-        f"- 状态 ok：{report.get('ok')}",
+        f"- Method: Laplacian variance",
+        f"- Threshold: {report.get('threshold')}",
+        f"- Stats: {st.get('total')} frames total | sharp {st.get('sharp')} | rescued {st.get('rescued')} | still blurry {st.get('blurry')}",
+        f"- Priority frames for analysis: {st.get('sharp_for_analysis_count')}",
+        f"- Status ok: {report.get('ok')}",
         "",
-        "## 仍模糊的时刻（勿细抠手指五官）",
+        "## Still-Blurry Moments (do not scrutinize fingers or facial features)",
     ]
     blur = report.get("blurry_remaining") or []
     if not blur:
-        lines.append("- （无）")
+        lines.append("- (none)")
     else:
         for r in blur:
             lines.append(f"- t={r.get('time_sec')}s score={r.get('score')} → `{r.get('path')}`")
     lines += [
         "",
-        "## 画面代理规则",
-        "1. **优先** read_file `sharp_for_analysis` 列表中的路径",
-        "2. 模糊帧：可记时间与大致姿态，**不要**编造清晰手型/五官细节",
-        "3. 若 blurry 过多：动作清单写趋势与幅度，细节写「因运动模糊不可确认」",
+        "## Visual Agent Rules",
+        "1. **Prefer** read_file on the paths in the `sharp_for_analysis` list",
+        "2. Blurry frames: you may note the time and rough pose; **do not** invent sharp hand-shape / facial-feature details",
+        "3. If there are too many blurry frames: the Action List describes trend and amplitude; for details write \"cannot be confirmed due to motion blur\"",
         "",
     ]
     (out_dir / "frame_quality_brief.md").write_text("\n".join(lines), encoding="utf-8")
