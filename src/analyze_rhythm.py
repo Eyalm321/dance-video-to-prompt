@@ -105,7 +105,11 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
     S = np.array(frames)
     freqs = np.fft.rfftfreq(nfft, 1 / sr)
     hop_s = hop / sr
-    t = np.arange(S.shape[0]) * hop_s
+    # An onset rises fastest when the transient sits 3/4 into the Hann window, and
+    # np.diff credits the rise to the later frame; without this offset, onset
+    # times (and the beat grid) land ~30ms early
+    onset_delay = (0.75 * nfft - 0.5 * hop) / sr
+    t = np.arange(S.shape[0]) * hop_s + onset_delay
 
     kick = S[:, (freqs >= 40) & (freqs < 150)].sum(1)
     snare = S[:, (freqs >= 1500) & (freqs < 5000)].sum(1)
@@ -167,7 +171,7 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
         nbeat = 0
         bt = float(off)
         while bt < dur:
-            idx = int(round(bt / hop_s))
+            idx = int(round((bt - onset_delay) / hop_s))
             if 0 <= idx < len(o):
                 sc += float(o[idx]) + 0.5 * float(o_kick[idx])
                 nbeat += 1
@@ -214,7 +218,7 @@ def analyze_audio(data: np.ndarray, sr: int) -> dict[str, Any]:
     # Search window of about ±10% of a beat (never under ±2 hops) absorbs residual drift
     hw = max(2, int(round(0.1 * period / hop_s)))
     for i, b in enumerate(beats):
-        idx = max(0, min(len(o_kick) - 1, int(round(b / hop_s))))
+        idx = max(0, min(len(o_kick) - 1, int(round((b - onset_delay) / hop_s))))
         lo, hi = max(0, idx - hw), min(len(o_kick), idx + hw + 1)
         k, s, f = float(o_kick[lo:hi].max()), float(o_snare[lo:hi].max()), float(o_full[lo:hi].max())
         kind = "soft" if f < 0.15 else ("kick" if k >= s else "snare_hi")
