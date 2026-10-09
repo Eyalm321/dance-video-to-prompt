@@ -2,7 +2,7 @@
 # Rhythm analysis wrapper: locates REPO_ROOT, then calls scripts/analyze_rhythm.sh
 set -euo pipefail
 
-SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd -P)"
 
 resolve_repo_root() {
   if [[ -n "${DANCE_VIDEO_PROMPT_ROOT:-}" && -d "${DANCE_VIDEO_PROMPT_ROOT}" ]]; then
